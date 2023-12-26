@@ -7,7 +7,7 @@
 <#noparse>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh_CN">
 <head>
     <meta charset="UTF-8">
     <title>批量上传</title>

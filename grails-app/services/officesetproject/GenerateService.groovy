@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service
 @Transactional
 @Service
 class GenerateService {
+    //    Application 中的 @Bean注册的单列
     @Autowired
     Configuration freeMarkerConfig
     
@@ -31,20 +32,18 @@ class GenerateService {
     }
 
 
-    def generateControllerFile(String domainClassName){
+    def generateControllerFile(String domainName){
         def packageName = defaultPackage
-        def domainName = domainClassName
+
+
+
+        /*
         Map<String, Object> ftlInputData = new HashMap<>();
-        ftlInputData.put("packageName",packageName)
-        ftlInputData.get("domainName",domainName)
-        ftlInputData.get("domainVariableName",lowercaseFirstClassName(domainName))
-
-        ftlInputData.get("classProperties",domainName)
-
-
         def fileName = domainName+"Controller.groovy"
         def filePath = "D:\\generateTest\\"+fileName
         generateFunctionToFile("Controller.groovy.ftl",ftlInputData,filePath)
+         */
+
     }
 
     public void generateFunctionToFile(String templateFile, Map<String, Object> obj,String filePath) {
@@ -74,37 +73,70 @@ class GenerateService {
     }
 
 
+    def getAllDomainName(){
+        def classList = grailsApplication.getArtefacts("Domain")
+        def domainInformation = []
+        classList.each{final def singleClass ->
+            def domainClassName = singleClass.getName()
+            def singleInfo = ["domainName": domainClassName]
+            domainInformation.push(singleInfo)
+        }
+        def result = [
+                code : 0, msg: "",
+                data : domainInformation,
+                count: domainInformation.size(),
+        ]
+        return result
+    }
+
+
+    def getAllParameters(String domainName){
+        def generateList = Generate.findAllByDomainName(domainName)
+        return generateList
+    }
+
     /**
      * 获取当前Domain的所有信息
      */
-    def getDomainAllInformation(String className){
+    def getDomainAllInformation(String domainName){
+        def packageName = defaultPackage
+//        用系统的方法获取domain层的所有类的数组
         def classList = grailsApplication.getArtefacts("Domain")
+//        each 循环
         classList.each { final def singleClass ->
-            def domainName = singleClass.getName()
-            if (domainName == className) {
-                println(domainName)
-
+//            用java 反射来获取所有的字段名称
+            def domainClassName = singleClass.getName()
+//            判断是否是要判断的类名
+            if (domainClassName == domainName) {
                 def domainClazz = singleClass.clazz
-                def propertyList = []
-
                 domainClazz.declaredFields.each { field ->
                     if (!field.synthetic && !field.name.startsWith('$')) {
-                        println( field.name)
-                        println( field.type.name)
+//                        println( field.name)
+//                        println( field.type.name)
 //                        过滤一些参数和字段
-                        if (field.name==""){
-
+                        if (isFieldNameInList(field.name)==false){
+//                            插入之前先查询一下
+                            Generate beforeInsert = Generate.findByDomainNameAndClassProperty(domainName,field.name)
+                            if (!beforeInsert){
+                                Generate generate = new Generate()
+                                generate.domainName = domainName
+                                generate.packageName = packageName
+                                generate.domainVariableName = lowercaseFirstClassName(domainName)
+                                generate.classProperty = field.name
+                                generate.propertyType = field.type.name
+//                            默认为启用模式
+                                generate.status = "启用"
+                                generate.whetherRequired = "需要必填项"
+//                            保存到数据库，用于生成
+                                generate.save(failOnError: true)
+                            }
                         }
-
-
-
-
-                        propertyList << ["name": field.name, "type": field.type.name] as Map<String, Object>
                     }
                 }
 
             }
         }
+
     }
 
     /**
@@ -113,9 +145,9 @@ class GenerateService {
      * @return string lowercased
      */
     def lowercaseFirstClassName(String className) {
-        if (className && Character.isUpperCase(className[0])) {
-            def lowercased = className.substring(0, 1).toLowerCase() + className.substring(1)
-            return lowercased
+        if (className && Character.isUpperCase(className[0] as char)) {
+            def lowerCased = className.substring(0, 1).toLowerCase() + className.substring(1)
+            return lowerCased
         } else {
             return className
         }
@@ -140,7 +172,6 @@ class GenerateService {
                 'org_grails_datastore_gorm_GormValidateable__errors',
                 'org_grails_datastore_gorm_GormValidateable__skipValidate'
         ]
-
         return fieldNameList.contains(fieldName)
     }
 

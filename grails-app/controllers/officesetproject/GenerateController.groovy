@@ -3,13 +3,11 @@ package officesetproject
 import grails.converters.JSON
 
 class GenerateController {
-//    Application 中的 @Bean注册的单列
-    def GenerateService generateService
+
+    GenerateService generateService
 
     def index() {
-//        展示所有的数据库
         if (request.method == "POST"){
-            generateService.getDomainAllInformation("Member");
             def successResponseData = [
                     "code":200,
                     "data":"成功",
@@ -20,7 +18,30 @@ class GenerateController {
         }
     }
 
+    def allDomainList(){
+        render generateService.getAllDomainName() as JSON
+    }
 
+
+    def editBuildParameters(){
+        if (request.method == "POST"){
+            String domainName = params.get("domainName")
+            generateService.getDomainAllInformation(domainName)
+            render generateService.getAllParameters(domainName) as JSON
+        }else {
+            render(view: "editBuildParameters")
+        }
+    }
+
+
+    /**
+     * 初始化参数
+     */
+    def initParameters(){
+
+
+
+    }
 
 
     /*
