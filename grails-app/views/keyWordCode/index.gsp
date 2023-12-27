@@ -23,73 +23,82 @@
   margin-left: 150px;
 }
 
-legend {
+.titleSet{
   font-size: x-large;
-  padding: 3px 6px;
 }
-
 </style>
 
 </head>
 
 <body>
-<fieldset>
-  <legend class="layui-elem-field layui-field-title">
-    关键词
-  </legend>
-  <form id="addOrUpdateForm" lay-filter="addOrUpdateForm" class="layui-form model-form">
-    <input name="id" type="hidden"/>
-    <div class="layui-form-item">
-      <label class="layui-form-label">域名：</label>
-      <div class="layui-input-block"  >
-        <input name="domainUrlName" id="domainUrlName" class="layui-input" placeholder="" />
-      </div>
-    </div>
+<div class="layui-bg-gray" style="padding: 16px;">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md12">
+      <div class="layui-card">
+        <div class="layui-card-header titleSet">关键词生成</div>
+        <div class="layui-card-body">
+          <form id="addOrUpdateForm" lay-filter="addOrUpdateForm" class="layui-form model-form">
+            <input name="id" type="hidden"/>
+            <div class="layui-form-item">
+              <label class="layui-form-label">域名：</label>
+              <div class="layui-input-block"  >
+                <input name="domainUrlName" id="domainUrlName" class="layui-input" placeholder="" />
+              </div>
+            </div>
 
-    <div class="layui-form-item">
-      <label class="layui-form-label">关键词标题：</label>
-      <div class="layui-input-block"  >
-        <input name="keyWordTitle" id="keyWordTitle" class="layui-input" placeholder="请输入关键词标题" required />
-      </div>
-    </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">关键词标题：</label>
+              <div class="layui-input-block"  >
+                <input name="keyWordTitle" id="keyWordTitle" class="layui-input" placeholder="请输入关键词标题" required autocomplete="off"/>
+              </div>
+            </div>
 
-    <div class="layui-form-item">
-      <label class="layui-form-label">关键词描述：</label>
-      <div class="layui-input-block"  >
-        <input name="keyWordDescription" id="keyWordDescription" class="layui-input" placeholder="请输入关键词描述" required/>
-      </div>
-    </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">关键词描述：</label>
+              <div class="layui-input-block"  >
+                <input name="keyWordDescription" id="keyWordDescription" class="layui-input" placeholder="请输入关键词描述" required autocomplete="off"/>
+              </div>
+            </div>
 
-    <div class="layui-form-item">
-      <label class="layui-form-label">关键词：</label>
-      <div class="layui-input-block"  >
-        <input name="keyWords" id="keyWords" class="layui-input" placeholder="请输入关键词" required/>
-      </div>
-    </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">关键词：</label>
+              <div class="layui-input-block"  >
+                <input name="keyWords" id="keyWords" class="layui-input" placeholder="请输入关键词" required autocomplete="off"/>
+              </div>
+            </div>
 
-    <div class="layui-form-item">
-      <label class="layui-form-label">额外信息：</label>
-      <div class="layui-input-block">
-        <input name="otherMessage" id="otherMessage" class="layui-input" placeholder="请输入额外信息" required/>
-      </div>
-    </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">额外信息：</label>
+              <div class="layui-input-block">
+                <input name="otherMessage" id="otherMessage" class="layui-input" placeholder="请输入额外信息" required autocomplete="off"/>
+              </div>
+            </div>
 
-    <div class="layui-form-item">
-      <label class="layui-form-label">完整代码：</label>
-      <div class="layui-input-block"  >
-        <textarea name="fullCode" id="fullCode" class="layui-input" placeholder="" style="height: 200px"></textarea>
-      </div>
-    </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">完整代码：</label>
+              <div class="layui-input-block"  >
+                <textarea name="fullCode" id="fullCode" class="layui-input" placeholder="" style="height: 200px"></textarea>
+              </div>
+            </div>
 
-    <div class="layui-form-item">
-      <div class="layui-input-block">
-        <button type="button" class="layui-btn layui-bg-blue" id="generateCode">生成代码</button>
-        <button class="layui-btn" lay-filter="formSubmitBtn" lay-submit>保存</button>
-        <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+            <div class="layui-form-item">
+              <div class="layui-input-block">
+                <button type="button" class="layui-btn layui-bg-blue" id="generateCode">生成代码</button>
+                <button class="layui-btn" lay-filter="formSubmitBtn" lay-submit>保存</button>
+                <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </form>
-</fieldset>
+  </div>
+</div>
+
+
+
+
+
 
 <script>
   const table = layui.table;

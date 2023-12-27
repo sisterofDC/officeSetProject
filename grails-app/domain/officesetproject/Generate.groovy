@@ -6,7 +6,7 @@ class Generate {
     /** 类名 */
     String domainName
     /** 类名的中文*/
-    String domainNameChines
+    String domainNameChinese
     /** 变量名 */
     String domainVariableName
     /** 属性名 */
@@ -49,7 +49,7 @@ class Generate {
 //        状态设置，这个字段是否生成状态
         status(nullable: true,blank: true)
 //        类名的中午名称
-        domainNameChines(nullable: true,blank: true)
+        domainNameChinese(nullable: true,blank: true)
 //        必填选项
         whetherRequired(nullable: true,blank: true)
 

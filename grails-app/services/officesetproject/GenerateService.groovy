@@ -26,49 +26,129 @@ class GenerateService {
 
     def generateTest(){
         // Create the root hash
-        Map<String, Object> root = new HashMap<>();
-        root.put("name", "sisterofdc");
+        Map<String, Object> root = new HashMap<>()
+        root.put("name", "sisterofdc")
         generateFunction("batchUpload.ftl",root)
     }
 
 
-    def generateControllerFile(String domainName){
-        def packageName = defaultPackage
+    def generateListGSPFile(String domainName){
+        def generateList = Generate.findAllByDomainName(domainName)
+        Map<String, Object> ftlInputData = new HashMap<>()
+        if (generateList.size()>0){
+            Generate generateSingle = generateList.get(0)
+            String domainNameChinese = generateSingle.domainNameChinese
+            String domainVariableName = generateSingle.domainVariableName
+//        判空
+            if (domainNameChinese==""){
+                return false
+            }else {
+                ftlInputData.put("domainNameChinese",domainNameChinese)
+                ftlInputData.put("domainVariableName",domainVariableName)
+                List<LinkedHashMap<String,String>> classPropertiesInput = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesTable = new ArrayList<>()
+                generateList.each {generate ->
+                    if (generate.status=="启用"){
+                        def propertyInput = [
+                                "classPropertyChinese":generate.classPropertyChinese,
+                                "classPropertyName":generate.classProperty,
+                        ]
+                        classPropertiesInput.add(propertyInput)
 
-
-
+                        if (generate.query=="dateInput"){
+                            def propertyTable = [
+                                    "classPropertyChinese":generate.classPropertyChinese,
+                                    "classPropertyName":generate.classProperty,
+                                    "templet":"templet:\"<div>{{layui.util.toDateString(d." +generate.classProperty + ", 'yyyy-MM-dd')}}</div>\",",
+                            ]
+                            classPropertiesTable.add(propertyTable)
+                        }else if (generate.query=="input"){
+                            def propertyTable = [
+                                    "classPropertyChinese":generate.classPropertyChinese,
+                                    "classPropertyName":generate.classProperty,
+                                    "templet":"",
+                            ]
+                            classPropertiesTable.add(propertyTable)
+                        }
+                    }
+                }
+                ftlInputData.put("classPropertiesInput",classPropertiesInput)
+                ftlInputData.put("classPropertiesTable",classPropertiesTable)
+                def fileName ="list.gsp"
+                def filePath = "D:\\generateTest\\"+fileName
+                generateFunctionToFile("list.ftl",ftlInputData,filePath)
+            }
+        }
         /*
-        Map<String, Object> ftlInputData = new HashMap<>();
         def fileName = domainName+"Controller.groovy"
         def filePath = "D:\\generateTest\\"+fileName
         generateFunctionToFile("Controller.groovy.ftl",ftlInputData,filePath)
          */
-
     }
 
-    public void generateFunctionToFile(String templateFile, Map<String, Object> obj,String filePath) {
-        try {
-            Template temp = freeMarkerConfig.getTemplate(templateFile);
-            File file = new File(filePath);
-            Writer fileWriter = new FileWriter(file);
-            temp.process(obj, fileWriter);
-            fileWriter.flush();
-            fileWriter.close();
-        } catch (TemplateException | IOException e) {
-            throw new RuntimeException(e);
+    def generateEditGSPFile(String domainName){
+        def generateList = Generate.findAllByDomainName(domainName)
+        Map<String, Object> ftlInputData = new HashMap<>()
+        if (generateList.size()>0){
+            Generate generateSingle = generateList.get(0)
+            String domainNameChinese = generateSingle.domainNameChinese
+            String domainVariableName = generateSingle.domainVariableName
+            if (domainNameChinese==""){
+                return false
+            }else {
+                ftlInputData.put("domainNameChinese",domainNameChinese)
+                ftlInputData.put("domainVariableName",domainVariableName)
+                List<LinkedHashMap<String,String>> classPropertiesInput = new ArrayList<>()
+                generateList.each {generate ->
+                    if (generate.status=="启用"){
+                        if (generate.whetherRequired=="需要必填项"){
+                            def propertyInput = [
+                                    "classPropertyChinese":generate.classPropertyChinese,
+                                    "classPropertyName":generate.classProperty,
+                                    "whetherRequired":"required",
+                            ]
+                            classPropertiesInput.add(propertyInput)
+                        }else {
+                            def propertyInput = [
+                                    "classPropertyChinese":generate.classPropertyChinese,
+                                    "classPropertyName":generate.classProperty,
+                                    "whetherRequired":"",
+                            ]
+                            classPropertiesInput.add(propertyInput)
+                        }
+                    }
+                }
+                ftlInputData.put("classPropertiesInput",classPropertiesInput)
+                def fileName ="edit.gsp"
+                def filePath = "D:\\generateTest\\"+fileName
+                generateFunctionToFile("edit.ftl",ftlInputData,filePath)
+            }
         }
     }
 
 
-
-    public void generateFunction(String templateFile, Map<String, Object> obj) {
-        StringWriter sw = new StringWriter();
+    void generateFunctionToFile(String templateFile, Map<String, Object> obj, String filePath) {
         try {
-            Template temp = freeMarkerConfig.getTemplate(templateFile);
-            Writer out = new OutputStreamWriter(System.out);
-            temp.process(obj, out);
+            Template temp = freeMarkerConfig.getTemplate(templateFile)
+            File file = new File(filePath)
+            Writer fileWriter = new FileWriter(file)
+            temp.process(obj, fileWriter)
+            fileWriter.flush()
+            fileWriter.close()
         } catch (TemplateException | IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e)
+        }
+    }
+
+
+    void generateFunction(String templateFile, Map<String, Object> obj) {
+        StringWriter sw = new StringWriter()
+        try {
+            Template temp = freeMarkerConfig.getTemplate(templateFile)
+            Writer out = new OutputStreamWriter(System.out)
+            temp.process(obj, out)
+        } catch (TemplateException | IOException e) {
+            throw new RuntimeException(e)
         }
     }
 
@@ -124,6 +204,12 @@ class GenerateService {
                                 generate.domainVariableName = lowercaseFirstClassName(domainName)
                                 generate.classProperty = field.name
                                 generate.propertyType = field.type.name
+//                                先弄几个简单的，查询类型
+                                if (field.type.name=="java.lang.String"){
+                                    generate.query = "input"
+                                }else if (field.type.name=="java.util.Date"){
+                                    generate.query = "dateInput"
+                                }
 //                            默认为启用模式
                                 generate.status = "启用"
                                 generate.whetherRequired = "需要必填项"
@@ -175,4 +261,7 @@ class GenerateService {
         return fieldNameList.contains(fieldName)
     }
 
+    def save(Generate generate){
+        generate.save(failOnError: true)
+    }
 }

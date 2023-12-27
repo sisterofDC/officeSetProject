@@ -63,7 +63,8 @@
     function renderTable() {
         insTb = table.render({
             elem: '#dataTable',
-            url: '${r}/generate/allDomainList',
+            url: '${r}/generate/index',
+            method: 'post',
             cols: [
                 [
                     {field: 'domainName', title: 'domain层的类名',minWidth: 160},

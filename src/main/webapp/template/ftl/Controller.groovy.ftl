@@ -46,6 +46,10 @@ class ${domainName}Controller {
          if (params.id && params.id =~ /^[0-9]*$/) {
             def ${domainVariableName} = ${domainName}.get(params.long("id"))
             if (${domainVariableName}) {
+               def successResponseData = [
+                  "code":200,
+                  "data":${domainVariableName},
+               ]
                render donationRecord as JSON
             } else {
             render(status: 404, text: "未找到记录")
@@ -90,21 +94,25 @@ class ${domainName}Controller {
 // 删除为危险操作，请添加权限验证
 // 当前操作为批量操作
    def cmd() {
-      def ids = params.ids?.trim()?.tokenize(',')
-      if (ids) {
-         ids.each { id ->
-            if (id && id =~ /^[0-9]*$/) {
-               def ${domainVariableName} = ${domainName}.get(id)
+      if (request.method == "POST") {
+         def ids = params.ids?.trim()?.tokenize(',')
+         if (ids) {
+            ids.each { id ->
+               if (id && id =~ /^[0-9]*$/) {
+                  def ${domainVariableName} = ${domainName}.get(id)
 // 如果需要，添加更多权限验证
-               if (SpringSecurityUtils.ifAnyGranted('ROLE_系统管理员')) {
-                  if (params.cmd == "delete") {
-                     ${domainVariableName}?.delete(failOnError: true)
+                  if (SpringSecurityUtils.ifAnyGranted('ROLE_系统管理员')) {
+                     if (params.cmd == "delete") {
+                        ${domainVariableName}?.delete(failOnError: true)
+                     }
                   }
                }
             }
          }
+      render ([status: 200, text: "操作成功"] as JSON)
+      } else {
+         render(status: 400, text: "请求方式错误")
       }
-      render ([status: 200, msg: "操作成功"] as JSON)
    }
 
 }
