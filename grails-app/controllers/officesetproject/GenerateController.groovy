@@ -61,9 +61,10 @@ class GenerateController {
             String domainName = params.get("domainName")
             generateService.generateListGSPFile(domainName)
             generateService.generateEditGSPFile(domainName)
+            generateService.generateControllerGroovyFile(domainName)
             def successResponseData = [
                     "code":200,
-                    "data":"成功",
+                    "text":"代码生成成功",
             ]
             render(successResponseData as JSON)
         }else {

@@ -21,6 +21,8 @@ class Generate {
     String status
     /**  必填 选项*/
     String whetherRequired
+    /** 查询方式设定 相等查询 模糊查询 */
+    String inquiryMode
 
 
     Date dateCreated  //自动生成创建时间
@@ -52,7 +54,8 @@ class Generate {
         domainNameChinese(nullable: true,blank: true)
 //        必填选项
         whetherRequired(nullable: true,blank: true)
-
+//        查询方式设定
+        inquiryMode(nullable: true,blank: true)
         createUser(nullable: true,blank: true)
         lastUpdatedBy(nullable: true,blank: true)
     }

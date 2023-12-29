@@ -47,6 +47,7 @@ class GenerateService {
                 ftlInputData.put("domainVariableName",domainVariableName)
                 List<LinkedHashMap<String,String>> classPropertiesInput = new ArrayList<>()
                 List<LinkedHashMap<String,String>> classPropertiesTable = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesDate = new ArrayList<>()
                 generateList.each {generate ->
                     if (generate.status=="启用"){
                         def propertyInput = [
@@ -61,7 +62,11 @@ class GenerateService {
                                     "classPropertyName":generate.classProperty,
                                     "templet":"templet:\"<div>{{layui.util.toDateString(d." +generate.classProperty + ", 'yyyy-MM-dd')}}</div>\",",
                             ]
+                            def propertyDate =[
+                                    "classPropertyName":generate.classProperty,
+                            ]
                             classPropertiesTable.add(propertyTable)
+                            classPropertiesDate.add(propertyDate)
                         }else if (generate.query=="input"){
                             def propertyTable = [
                                     "classPropertyChinese":generate.classPropertyChinese,
@@ -74,16 +79,12 @@ class GenerateService {
                 }
                 ftlInputData.put("classPropertiesInput",classPropertiesInput)
                 ftlInputData.put("classPropertiesTable",classPropertiesTable)
+                ftlInputData.put("classPropertiesDate",classPropertiesDate)
                 def fileName ="list.gsp"
                 def filePath = "D:\\generateTest\\"+fileName
                 generateFunctionToFile("list.ftl",ftlInputData,filePath)
             }
         }
-        /*
-        def fileName = domainName+"Controller.groovy"
-        def filePath = "D:\\generateTest\\"+fileName
-        generateFunctionToFile("Controller.groovy.ftl",ftlInputData,filePath)
-         */
     }
 
     def generateEditGSPFile(String domainName){
@@ -99,6 +100,7 @@ class GenerateService {
                 ftlInputData.put("domainNameChinese",domainNameChinese)
                 ftlInputData.put("domainVariableName",domainVariableName)
                 List<LinkedHashMap<String,String>> classPropertiesInput = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesDate = new ArrayList<>()
                 generateList.each {generate ->
                     if (generate.status=="启用"){
                         if (generate.whetherRequired=="需要必填项"){
@@ -116,9 +118,17 @@ class GenerateService {
                             ]
                             classPropertiesInput.add(propertyInput)
                         }
+
+                        if (generate.query=="dateInput"){
+                            def propertyDate =[
+                                    "classPropertyName":generate.classProperty,
+                            ]
+                            classPropertiesDate.add(propertyDate)
+                        }
                     }
                 }
                 ftlInputData.put("classPropertiesInput",classPropertiesInput)
+                ftlInputData.put("classPropertiesDate",classPropertiesDate)
                 def fileName ="edit.gsp"
                 def filePath = "D:\\generateTest\\"+fileName
                 generateFunctionToFile("edit.ftl",ftlInputData,filePath)
@@ -126,7 +136,68 @@ class GenerateService {
         }
     }
 
+    def generateControllerGroovyFile(String domainName){
+        def generateList = Generate.findAllByDomainName(domainName)
+        Map<String, Object> ftlInputData = new HashMap<>()
+        if (generateList.size()>0){
+            Generate generateSingle = generateList.get(0)
+            String domainNameChinese = generateSingle.domainNameChinese
+            String domainVariableName = generateSingle.domainVariableName
+            String packageName = generateSingle.packageName
+            if (domainNameChinese==""){
+                return false
+            }else {
+                ftlInputData.put("domainName",domainName)
+                ftlInputData.put("domainVariableName",domainVariableName)
+                ftlInputData.put("packageName",packageName)
+                List<LinkedHashMap<String,String>> classPropertiesQuery = new ArrayList<>()
+                generateList.each {generate ->
+                    if (generate.status=="启用"){
+                        if (generate.query=="dateInput"){
+                            def propertyQuery = [
+                                    "classPropertyChinese":generate.classPropertyChinese,
+                                    "classPropertyName":generate.classProperty,
+                                    "query":"def dateArray = params.get('" +generate.classProperty+ "').toString().split(' - ')\n" +
+                                            "               def startDate = Date.parse('yyyy-MM-dd HH:mm:ss', dateArray[0])\n" +
+                                            "               def endDate = Date.parse('yyyy-MM-dd HH:mm:ss',  dateArray[1])\n" +
+                                            "               ge('"+generate.classProperty+ "',startDate)\n" +
+                                            "               le('"+generate.classProperty+ "',endDate)",
+                            ]
+                            classPropertiesQuery.add(propertyQuery)
+                        }else if (generate.query=="input"){
+                            if (generate.inquiryMode=="相等查询"){
+                                def propertyQuery = [
+                                        "classPropertyChinese":generate.classPropertyChinese,
+                                        "classPropertyName":generate.classProperty,
+                                        "query":"eq('"+generate.classProperty+"', params." +generate.classProperty+ ")",
+                                ]
+                                classPropertiesQuery.add(propertyQuery)
+                            }else if (generate.inquiryMode=="模糊查询"){
+                                def propertyQuery = [
+                                        "classPropertyChinese":generate.classPropertyChinese,
+                                        "classPropertyName":generate.classProperty,
+                                        "query":"ilike('" +generate.classProperty+ "', '%' + params." +generate.classProperty+ " + '%')",
+                                ]
+                                classPropertiesQuery.add(propertyQuery)
+                            }
+                        }
+                    }
+                }
+                ftlInputData.put("classPropertiesQuery",classPropertiesQuery)
+                def fileName =domainName+"Controller.groovy"
+                def filePath = "D:\\generateTest\\"+fileName
+                generateFunctionToFile("Controller.groovy.ftl",ftlInputData,filePath)
+            }
+        }
+    }
 
+
+    /**
+     * 写入文件
+     * @param templateFile
+     * @param obj
+     * @param filePath
+     */
     void generateFunctionToFile(String templateFile, Map<String, Object> obj, String filePath) {
         try {
             Template temp = freeMarkerConfig.getTemplate(templateFile)
@@ -140,9 +211,12 @@ class GenerateService {
         }
     }
 
-
+    /**
+     * 用的 System.out.println 输出参数，更多的用于测试
+     * @param templateFile
+     * @param obj
+     */
     void generateFunction(String templateFile, Map<String, Object> obj) {
-        StringWriter sw = new StringWriter()
         try {
             Template temp = freeMarkerConfig.getTemplate(templateFile)
             Writer out = new OutputStreamWriter(System.out)
@@ -210,6 +284,7 @@ class GenerateService {
                                 }else if (field.type.name=="java.util.Date"){
                                     generate.query = "dateInput"
                                 }
+                                generate.inquiryMode="相等查询"
 //                            默认为启用模式
                                 generate.status = "启用"
                                 generate.whetherRequired = "需要必填项"

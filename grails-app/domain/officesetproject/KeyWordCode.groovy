@@ -32,7 +32,7 @@ class KeyWordCode {
         keyWords(nullable: true,blank: true)
         keyWordDescription(nullable: true,blank: true)
         otherMessage(nullable: true,blank: true)
-        fullCode(nullable: true, maxSize:20000)
+        fullCode(nullable: true, maxSize:10000)
 
         createUser(nullable: true,blank: true)
         lastUpdatedBy(nullable: true,blank: true)

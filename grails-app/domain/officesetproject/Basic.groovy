@@ -31,20 +31,20 @@ class Basic {
 // 这里用于写验证参数。 Validation and Constraints
 // 基本的验证参数。
     /*
-blank Validates that a String value is not blank login(blank:false)  验证String 是否是为空
-inList Validates that a value is within a range or collection of constrained values. name(inList: ["Joe"]) 在List 中验证是否包含
-matches Validates that a String value matches a given regular expression. login(matches: "[a-zA-Z]+") regex匹配
-max Validates that a value does not exceed the given maximum value. age(max: new Date()) price(max: 999F) 最大
-maxSize Validates that a value’s size does not exceed the given maximum value. children(maxSize: 25) 最大
-min Validates that a value does not fall below the given minimum value. age(min: new Date()) price(min: 0F) 最小
-minSize Validates that a value’s size does not fall below the given minimum value. children(minSize: 25) 最小
-notEqual Validates that that a property is not equal to the specified value login(notEqual: "Bob") 不等
-nullable Allows a property to be set to null - defaults to false. age(nullable: true) 为空
-range Uses a Groovy range to ensure that a property’s value occurs within a specified range age(range: 18..65) 范围
-scale Set to the desired scale for floating point numbers (i.e. the number of digits to the right of the decimal point). salary(scale: 2) 小数点
-size Uses a Groovy range to restrict the size of a collection or number or the length of a String. children(size: 5..15) 范围
-unique Constrains a property as unique at the database level login(unique: true) 唯一性
-url Validates that a String value is a valid URL. homePage(url: true)  验证URL
+blank    login(blank:false)  验证String 是否是为空
+inList   name(inList: ["Joe"]) 在List 中验证是否包含
+matches  login(matches: "[a-zA-Z]+") regex匹配
+max      age(max: new Date()) price(max: 999F) 最大
+maxSize  children(maxSize: 25) 最大
+min      age(min: new Date()) price(min: 0F) 最小
+minSize  children(minSize: 25) 最小
+notEqual login(notEqual: "Bob") 不等
+nullable defaults to false. age(nullable: true) 是否可以为null，默认为false
+range    range age(range: 18..65) 范围设置
+scale    salary(scale: 2) 小数点，存入数据库中的小数点设置
+size     children(size: 5..15) number string 的length设定
+unique   login(unique: true) 唯一性
+url      homePage(url: true)  验证URL
      */
     static constraints = {
 
@@ -52,8 +52,8 @@ url Validates that a String value is a valid URL. homePage(url: true)  验证URL
 
 //    查询的时候，关闭版本号，默认的排序方式是 createTime ,自动时间增加
 //    Automatic timestamping
-//    If you define a dateCreated property it will be set to the current date for you when you create new instances
-//    if you define a lastUpdated property it will be automatically
+//    如果您定义了 dateCreated 属性，那么当您创建新实例时，它将被设置为当前日期
+//    如果你定义了lastUpdated属性，它会自动更新
 //    设置为 false 就不会自动生成了
 //    sort 是默认排序的意思。 sort 可以在表达式中使用  def airports = Airport.list(sort:'name') 也可以直接在这里写 一般为创建时间
     static mapping = {

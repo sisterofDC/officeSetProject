@@ -20,7 +20,7 @@ class RobotsFile {
 
     static constraints = {
         domainUrlName(nullable: true,blank: true)
-        robotsContent(nullable: true, blank: true,maxSize:20000)
+        robotsContent(nullable: true, blank: true,maxSize:10000)
         createUser(nullable: true,blank: true)
         lastUpdatedBy(nullable: true,blank: true)
     }

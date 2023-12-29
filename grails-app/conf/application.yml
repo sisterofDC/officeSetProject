@@ -114,7 +114,7 @@ environments:
     development:
         dataSource:
             pooled: true
-            dbCreate: "update"
+            dbCreate: "create"
             url: "jdbc:mysql://localhost:33061/office_study?useUnicode=true&characterEncoding=UTF-8"
             driverClassName: "com.mysql.jdbc.Driver"
             dialect: "org.hibernate.dialect.MySQL5InnoDBDialect"
@@ -139,3 +139,5 @@ quartz:
 server:
     context-path: "/"
     port: 80   #这里内嵌tomcat端口号
+
+

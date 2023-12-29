@@ -2,13 +2,16 @@ package ${packageName}
 
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
-
+import grails.plugin.springsecurity.SpringSecurityUtils
+import grails.plugin.springsecurity.annotation.Secured
 
 @Transactional
 class ${domainName}Controller {
 
-   static allowedMethods = [save: "POST", update: "PUT"]
+   static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
 
+// 表格生成
+   @Secured(['ROLE_系统管理员'])
    def list(){
       if (request.method == "POST"){
          def page = (params.int('page') ?: 0)
@@ -19,15 +22,16 @@ class ${domainName}Controller {
          params.offset = page * max
 <#--查询的类名 -->
          def criteria = ${domainName}.createCriteria()
-// 更改查询语句
+<#--更改查询语句-->
          def results = criteria.list(max: params.max, offset: params.offset) {
 <#--类名下面的参数查询-->
-<#list classProperties as property>
-            if(params.${property.name}){
+<#list classPropertiesQuery as property>
+            // 查询${property.classPropertyChinese}
+            if(params.${property.classPropertyName}){
                ${property.query}
             }
 </#list>
-         order('dateCreated', 'desc')
+            order('dateCreated', 'desc')
          }
          def result = [
             code : 0, msg: "",
@@ -41,27 +45,31 @@ class ${domainName}Controller {
    }
 
 // 查看功能
+   @Secured(['ROLE_系统管理员'])
    def edit() {
       if (request.method == "POST") {
-         if (params.id && params.id =~ /^[0-9]*$/) {
+// 验证ID
+      <#noparse>if (params.id && params.id =~ /^[0-9]*$/)</#noparse> {
             def ${domainVariableName} = ${domainName}.get(params.long("id"))
             if (${domainVariableName}) {
                def successResponseData = [
                   "code":200,
                   "data":${domainVariableName},
                ]
-               render donationRecord as JSON
+               render successResponseData as JSON
             } else {
-            render(status: 404, text: "未找到记录")
+            render ([code: 404, text: "未找到记录"] as JSON)
             }
          } else {
-            render(status: 400, text: "非法请求")
+            render ([code: 400, text: "非法请求"] as JSON)
          }
       } else {
          render(view: "edit")
       }
    }
 
+// 保存功能
+   @Secured(['ROLE_系统管理员'])
    def save() {
       def ${domainVariableName}
       if (params.id) {
@@ -85,7 +93,7 @@ class ${domainName}Controller {
             render result as JSON
          }
       } else {
-         println domainInstance.errors
+         println ${domainVariableName}.errors
          def result = [code: 500, text: ${domainVariableName}.errors.toString().replaceAll(/["'\n]/, '')]
          render result as JSON
       }
@@ -93,6 +101,7 @@ class ${domainName}Controller {
 
 // 删除为危险操作，请添加权限验证
 // 当前操作为批量操作
+   @Secured(['ROLE_系统管理员'])
    def cmd() {
       if (request.method == "POST") {
          def ids = params.ids?.trim()?.tokenize(',')
@@ -109,9 +118,9 @@ class ${domainName}Controller {
                }
             }
          }
-      render ([status: 200, text: "操作成功"] as JSON)
+         render ([code: 200, text: "操作成功"] as JSON)
       } else {
-         render(status: 400, text: "请求方式错误")
+         render ([code: 400, text: "请求方式错误"] as JSON)
       }
    }
 

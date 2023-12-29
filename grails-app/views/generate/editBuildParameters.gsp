@@ -79,7 +79,12 @@
 <input type="checkbox" name="whetherRequired"  data-id={{d.id}}  value="{{d.id}}" title="需要必填项|不需要" lay-skin="switch" lay-filter="whetherRequiredFilter" {{= d.whetherRequired == '需要必填项' ? "checked" : "" }}>
 </script>
 
-
+<script type="text/html" id="inquiryDropDown">
+<button class="layui-btn layui-btn-primary inquiryModeDropDown">
+    <span>{{= d.inquiryMode || '相等查询' }}</span>
+    <i class="layui-icon layui-icon-down layui-font-12"></i>
+</button>
+</script>
 
 <script>
     const table = layui.table;
@@ -137,6 +142,7 @@
             elem: '#dataTableParameters',
             cellMinWidth: 100,
             id : 'dataTableParametersId',
+            lineStyle: 'height: 50px;',
             cols: [
                 [
                     {field: 'id',title: 'id',hide:true},
@@ -148,6 +154,7 @@
                     {field: 'classPropertyChinese', title: '属性对应的中文',edit: 'text'},
                     {field: 'propertyType', title: '属性类型'},
                     {field: 'query', title: '查询类型'},
+                    {field: 'inquiryMode', title: '查询方式',templet: '#inquiryDropDown'},
                     {field: 'status', title: '状态', templet: '#statusSwitch'},
                     {field: 'whetherRequired',title: "是否必填", templet: '#whetherRequiredSwitch'},
                     {field: 'dateCreated', title: '创建时间',hide:true},
@@ -157,6 +164,39 @@
                 ]
             ],
             data:response,
+            done: function(res, curr, count){
+                var options = this;
+
+                // 获取当前行数据
+                table.getRowData = function(tableId, elem){
+                    var index = $(elem).closest('tr').data('index');
+                    return table.cache[tableId][index] || {};
+                };
+
+                dropdown.render({
+                    elem: '.inquiryModeDropDown',
+                    data: [{
+                        title: '相等查询',
+                        id: 100
+                    },{
+                        title: '模糊查询',
+                        id: 101
+                    },
+
+                    ],
+                    click: function(obj){
+                        let data = table.getRowData(options.id, this.elem); // 获取当前行数据(如 id 等字段，以作为数据修改的索引)
+                        this.elem.find('span').html(obj.title);
+                        // 更新数据中对应的字段
+                        data.inquiryMode = obj.title;
+                        // 显示 - 仅用于演示
+                        // layer.msg('选中值: '+ obj.title +'<br>当前行数据：'+ JSON.stringify(data));
+                    }
+                });
+
+
+
+            }
         });
 
         form.on('switch(statusFilter)', function(obj){
@@ -217,18 +257,26 @@
         })
 
         beginGenerate.click(function () {
-            $.ajax({
-                url: "${r}/generate/beginGenerate",
-                data:{
-                    "domainName":domainName
-                },
-                type: "POST",
-                success: function(response) {
-                    console.log(response)
-                },
-                error: function(error) {
-                    console.error('Error:', error);
-                }
+            layer.confirm('生成之前请核实填写完对应的中文没有？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function () {
+                $.ajax({
+                    url: "${r}/generate/beginGenerate",
+                    data:{
+                        "domainName":domainName
+                    },
+                    type: "POST",
+                    success: function(response) {
+                        console.log(response)
+                        if (response.code===200){
+                            layer.msg(response.text, function() {time:2000});
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
             });
         })
     }

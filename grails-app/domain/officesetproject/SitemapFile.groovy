@@ -19,7 +19,7 @@ class SitemapFile {
 
     static constraints = {
         domainUrlName(nullable: true,blank: true)
-        sitemapContent(nullable: true,blank: true,maxSize:20000)
+        sitemapContent(nullable: true,blank: true,maxSize:10000)
         createUser(nullable: true,blank: true)
         lastUpdatedBy(nullable: true,blank: true)
     }

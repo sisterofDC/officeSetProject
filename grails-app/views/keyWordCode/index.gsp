@@ -35,7 +35,7 @@
   <div class="layui-row layui-col-space15">
     <div class="layui-col-md12">
       <div class="layui-card">
-        <div class="layui-card-header titleSet">关键词生成</div>
+        <div class="layui-card-header titleSet">关键词填写</div>
         <div class="layui-card-body">
           <form id="addOrUpdateForm" lay-filter="addOrUpdateForm" class="layui-form model-form">
             <input name="id" type="hidden"/>
@@ -85,7 +85,6 @@
               <div class="layui-input-block">
                 <button type="button" class="layui-btn layui-bg-blue" id="generateCode">生成代码</button>
                 <button class="layui-btn" lay-filter="formSubmitBtn" lay-submit>保存</button>
-                <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
               </div>
             </div>
           </form>
@@ -110,11 +109,12 @@
 
   $(document).ready(function() {
     generateCodeButton()
+    initData()
   })
 
   // 表单提交事件
   form.on('submit(formSubmitBtn)', function (data) {
-    console.log("提交数据",JSON.stringify(data))
+    console.log("提交数据",JSON.stringify(data.field))
 
     let fullCode = $("#fullCode");
     if (fullCode.val().trim() === '') {
@@ -126,7 +126,7 @@
     $.ajax({
       url: '${r}/keyWordCode/save',
       method: "POST",
-      data: data,
+      data: data.field,
       success: function (response) {
         if (response.code===200){
           layer.msg("添加成功", function() {time:2000});
@@ -174,6 +174,29 @@
       fullCode.val(generatedCode);
     })
   }
+
+  function initData() {
+    $.ajax({
+      url: '${r}/keyWordCode/index',
+      method: "POST",
+      success: function (response) {
+        if (response.code===200){
+          // 成功保存后，提示，并退出
+          layer.msg("数据请求成功", function() {time:2000});
+          form.val('addOrUpdateForm',response.data)
+        }else {
+          console.log("错误信息",response)
+          layer.msg(response.text, function() {time:2000});
+        }
+      },
+      error: function (xhr, status, error) {
+        layer.alert("数据请求出现问题");
+        console.error("Error:",xhr, status, error);
+      }
+    });
+  }
+
+
 </script>
 
 </body>
