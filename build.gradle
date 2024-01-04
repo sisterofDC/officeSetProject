@@ -35,6 +35,7 @@ configurations {
 }
 
 dependencies {
+    implementation 'org.projectlombok:lombok:1.18.26'
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     compileOnly "io.micronaut:micronaut-inject-groovy"
     console "org.grails:grails-console"
@@ -79,16 +80,15 @@ dependencies {
     runtimeOnly 'mysql:mysql-connector-java:5.1.29'
 //    freeMarker 的依赖
     implementation group: 'org.freemarker', name: 'freemarker', version: '2.3.32'
-//    alibaba 编写Excel 的插件
-    implementation('com.alibaba:easyexcel:3.3.3') {
-        exclude group: 'org.apache.poi', module: 'poi-ooxml-schemas'
-    }
 //    Java poi 的依赖库
     implementation 'org.apache.poi:poi:5.2.3'
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
     implementation 'org.apache.commons:commons-csv:1.10.0'
     implementation 'org.ehcache:ehcache:3.10.8'
     implementation 'commons-io:commons-io:2.15.1'
     implementation 'org.apache.poi:poi-ooxml-full:5.2.3'
+//    poi-tl 的使用 用于word 文档的生成
+    implementation 'com.deepoove:poi-tl:1.12.1'
 
 }
 

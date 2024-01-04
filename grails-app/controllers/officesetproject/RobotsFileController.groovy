@@ -2,6 +2,7 @@ package officesetproject
 
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
+import org.springframework.validation.BindingResult
 
 @Transactional
 class RobotsFileController {
@@ -28,11 +29,11 @@ class RobotsFileController {
         def robotsFile
         def robotsFileList = RobotsFile.findAll()
         if (robotsFileList.size()>0) {
-            robotsFile = robotsFileList[0];
+            robotsFile = robotsFileList[0]
         } else {
-            robotsFile = new RobotsFile();
+            robotsFile = new RobotsFile()
         }
-        robotsFile.properties = params
+        robotsFile.properties = params as BindingResult
         if (!robotsFile.hasErrors() && robotsFile.validate()) {
             if (robotsFile.save(failOnError: true)) {
                 def result = [code: 200, text: "保存成功" ]

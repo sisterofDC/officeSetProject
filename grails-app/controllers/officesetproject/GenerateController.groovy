@@ -54,14 +54,26 @@ class GenerateController {
     }
 
     /**
-     * 开始生成
+     * 开始生成到项目目录，可以直接改到生成到项目文件里面
      */
     def beginGenerate(){
         if (request.method == "POST"){
             String domainName = params.get("domainName")
-            generateService.generateListGSPFile(domainName)
-            generateService.generateEditGSPFile(domainName)
-            generateService.generateControllerGroovyFile(domainName)
+            def list = generateService.generateListGSPFile(domainName)
+//   （TODO）:（ sisterofdc，2024.01.04） 这里到时候改一下文件生成目录
+            def listFilePath = "D:\\generateTest\\"+ list["fileName"]
+            generateService.generateFunctionToFile("list.ftl", list["ftlInputData"],listFilePath)
+
+
+            def edit =generateService.generateEditGSPFile(domainName)
+            def editFilePath = "D:\\generateTest\\"+edit["fileName"]
+            generateService.generateFunctionToFile("edit.ftl",edit["ftlInputData"],editFilePath)
+
+            def controller =generateService.generateControllerGroovyFile(domainName)
+            def controllerFilePath = "D:\\generateTest\\"+controller["fileName"]
+            generateService.generateFunctionToFile("Controller.groovy.ftl",controller["ftlInputData"],controllerFilePath)
+
+
             def successResponseData = [
                     "code":200,
                     "text":"代码生成成功",
@@ -76,6 +88,22 @@ class GenerateController {
         }
     }
 
-
-
+    def zipFile(){
+        if (request.method == "POST"){
+            String domainName = params.get("domainName")
+            def list = generateService.generateListGSPFile(domainName)
+            def edit =generateService.generateEditGSPFile(domainName)
+            def controller =generateService.generateControllerGroovyFile(domainName)
+            List<String> templateFiles = [list["templateFile"], edit["templateFile"], controller["templateFile"]]
+            List<Map<String, Object>> objs = [list["ftlInputData"], edit["ftlInputData"], controller["ftlInputData"]]
+            List<String> fileNames = [list["fileName"], edit["fileName"], controller["fileName"]]
+            generateService.generateFunctionsToZipAndSendResponse(templateFiles,objs,fileNames,response)
+        }else {
+            def errorResponseData = [
+                    "code":400,
+                    "text":"请求方式错误",
+            ]
+            render(errorResponseData as JSON)
+        }
+    }
 }

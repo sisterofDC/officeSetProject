@@ -26,13 +26,14 @@
     </style>
 </head>
 
-
 <body>
+
+
 <form id="addOrUpdateForm" lay-filter="addOrUpdateForm" class="layui-form model-form">
     <div class="layui-form-item">
         <label class="layui-form-label">包名：</label>
         <div class="layui-input-block"  >
-            <input name="packageName" id="packageName" class="layui-input" placeholder="" readonly/>
+            <input name="packageName" id="packageName" class="layui-input" placeholder="" />
         </div>
     </div>
 
@@ -63,6 +64,7 @@
             <button class="layui-btn" id="submitButton" lay-filter="formSubmitBtn" lay-submit type="button">保存</button>
             <button class="layui-btn layui-btn-primary" type="button" id="closePage">取消</button>
             <button class="layui-btn layui-btn-primary" type="button" id="beginGenerate">开始生成</button>
+            <button class="layui-btn layui-btn-primary" type="button" id="downloadZipFile">打包下载为ZIP</button>
         </div>
     </div>
 
@@ -85,6 +87,15 @@
     <i class="layui-icon layui-icon-down layui-font-12"></i>
 </button>
 </script>
+
+<script type="text/html" id="queryDropDown">
+<button class="layui-btn layui-btn-primary queryDropDown">
+    <span>{{= d.query || 'input' }}</span>
+    <i class="layui-icon layui-icon-down layui-font-12"></i>
+</button>
+</script>
+
+
 
 <script>
     const table = layui.table;
@@ -153,8 +164,8 @@
                     {field: 'classProperty', title: '属性名'},
                     {field: 'classPropertyChinese', title: '属性对应的中文',edit: 'text'},
                     {field: 'propertyType', title: '属性类型'},
-                    {field: 'query', title: '查询类型'},
-                    {field: 'inquiryMode', title: '查询方式',templet: '#inquiryDropDown'},
+                    {field: 'query', title: '查询类型',templet: '#queryDropDown',},
+                    {field: 'inquiryMode', title: '查询方式',templet: '#inquiryDropDown',},
                     {field: 'status', title: '状态', templet: '#statusSwitch'},
                     {field: 'whetherRequired',title: "是否必填", templet: '#whetherRequiredSwitch'},
                     {field: 'dateCreated', title: '创建时间',hide:true},
@@ -194,6 +205,27 @@
                     }
                 });
 
+                dropdown.render({
+                    elem: '.queryDropDown',
+                    data: [{
+                        title: 'input',
+                        id: 100
+                    },{
+                        title: 'dateInput',
+                        id: 101
+                    },{
+                        title: 'singleChoice',
+                        id: 102
+                    }
+                    ],
+                    click: function(obj){
+                        let data = table.getRowData(options.id, this.elem); // 获取当前行数据(如 id 等字段，以作为数据修改的索引)
+                        this.elem.find('span').html(obj.title);
+                        // 更新数据中对应的字段
+                        data.query = obj.title;
+                        // layer.msg('选中值: '+ obj.title +'<br>当前行数据：'+ JSON.stringify(data));
+                    }
+                });
 
 
             }
@@ -223,6 +255,7 @@
         let closePage = $("#closePage")
         let submitButton = $("#submitButton")
         let beginGenerate = $("#beginGenerate")
+        let downloadZipFile = $("#downloadZipFile")
 
         closePage.click(function () {
             parent.layer.close(parentIndex);
@@ -231,6 +264,8 @@
 
         submitButton.click(function () {
             let domainNameChineseVal = $("#domainNameChinese").val();
+            let packageNameVal = $("#packageName").val();
+
             if (domainNameChineseVal===null||domainNameChineseVal===''){
                 layer.msg("请填写类名的中文", function() {time:2000});
             }else {
@@ -279,6 +314,37 @@
                 });
             });
         })
+
+
+        downloadZipFile.click(function () {
+            layer.confirm('生成之前请核实填写完对应的中文没有？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '${r}/generate/zipFile',
+                    data:{
+                        "domainName":domainName
+                    },
+                    xhrFields: {
+                        responseType: 'blob' // Set the responseType to 'blob' here
+                    },
+                    success: function(data, status, xhr) {
+                        let blob = new Blob([data], { type: 'application/octet-stream;charset=UTF-8' });
+                        let url = window.URL.createObjectURL(blob);
+                        let a = document.createElement('a');
+                        a.href = url;
+                        a.download = domainName+"生成文件.zip"
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        })
     }
 
     function editConfigDataList(name, rowId, value) {
@@ -290,7 +356,6 @@
         }
         table.reload('dataTableParametersId', { data: configDataList });
     };
-
 
 
 </script>

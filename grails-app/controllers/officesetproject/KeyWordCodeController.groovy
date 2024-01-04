@@ -2,6 +2,7 @@ package officesetproject
 
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
+import org.springframework.validation.BindingResult
 
 @Transactional
 class KeyWordCodeController {
@@ -30,11 +31,11 @@ class KeyWordCodeController {
         def keyWordCode
         def keyWordCodeList = KeyWordCode.findAll()
         if (keyWordCodeList.size()>0) {
-            keyWordCode = keyWordCodeList[0];
+            keyWordCode = keyWordCodeList[0]
         } else {
-            keyWordCode = new KeyWordCode();
+            keyWordCode = new KeyWordCode()
         }
-        keyWordCode.properties = params
+        keyWordCode.properties = params as BindingResult
         if (!keyWordCode.hasErrors() && keyWordCode.validate()) {
             if (keyWordCode.save(failOnError: true)) {
                 def result = [code: 200, text: "保存成功"]
@@ -50,4 +51,8 @@ class KeyWordCodeController {
         }
     }
 
+    def KeyWordCodeConfig(){
+        def keyWordCode = KeyWordCode.findAll().get(0).fullCode
+        [keyWordCode : keyWordCode]
+    }
 }

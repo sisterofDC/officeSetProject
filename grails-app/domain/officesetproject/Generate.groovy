@@ -56,7 +56,9 @@ class Generate {
         whetherRequired(nullable: true,blank: true)
 //        查询方式设定
         inquiryMode(nullable: true,blank: true)
+//        创建人，也可以为空
         createUser(nullable: true,blank: true)
+//        最后一次更新
         lastUpdatedBy(nullable: true,blank: true)
     }
 }

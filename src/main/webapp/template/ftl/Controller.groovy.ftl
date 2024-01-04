@@ -74,7 +74,7 @@ class ${domainName}Controller {
       def ${domainVariableName}
       if (params.id) {
          ${domainVariableName} = ${domainName}.get(params.long("id"))
-         ${domainVariableName}.properties = params
+         ${domainVariableName}.properties = params as BindingResult
       } else {
          ${domainVariableName} = new ${domainName}(params)
       }

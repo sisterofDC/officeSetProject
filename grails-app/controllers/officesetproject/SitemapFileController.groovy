@@ -3,6 +3,7 @@ package officesetproject
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.validation.BindingResult
 
 
 @Transactional
@@ -11,7 +12,7 @@ class SitemapFileController {
 
     def index() {
         if (request.method == "POST") {
-            def sitemapFile = SitemapFile.findAll();
+            def sitemapFile = SitemapFile.findAll()
             if (sitemapFile.size()>0) {
                 def successResponseData = [
                         "code":200,
@@ -30,11 +31,11 @@ class SitemapFileController {
         def sitemapFile
         def sitemapFileList = SitemapFile.findAll()
         if (sitemapFileList.size()>0) {
-            sitemapFile = sitemapFileList[0];
+            sitemapFile = sitemapFileList[0]
         } else {
-            sitemapFile = new SitemapFile();
+            sitemapFile = new SitemapFile()
         }
-        sitemapFile.properties = params
+        sitemapFile.properties = params as BindingResult
         if (!sitemapFile.hasErrors() && sitemapFile.validate()) {
             if (sitemapFile.save(failOnError: true)) {
                 def result = [code: 200, text: "保存成功"]

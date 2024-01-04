@@ -13,7 +13,6 @@
   <asset:javascript src="jquery-3.5.1.min.js"/>
   <asset:stylesheet src="plugins/layui/css/layui.css" />
   <asset:javascript src="plugins/layui/layui.js"/>
-
 <style>
 .layui-form-label{
   width: 100px;
@@ -87,6 +86,15 @@
                 <button class="layui-btn" lay-filter="formSubmitBtn" lay-submit>保存</button>
               </div>
             </div>
+
+
+            <div class="layui-form-item">
+              <div class="layui-input-block">
+
+              </div>
+            </div>
+
+
           </form>
         </div>
       </div>

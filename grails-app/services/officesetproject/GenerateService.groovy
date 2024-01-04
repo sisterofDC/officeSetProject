@@ -1,13 +1,19 @@
 package officesetproject
 
+
 import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateException
 import grails.core.GrailsApplication
 import grails.gorm.transactions.Transactional
+import org.apache.tools.zip.ZipEntry
+import org.apache.tools.zip.ZipOutputStream
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+
+import javax.servlet.ServletOutputStream
+import javax.servlet.http.HttpServletResponse
 
 
 @Transactional
@@ -16,20 +22,12 @@ class GenerateService {
     //    Application 中的 @Bean注册的单列
     @Autowired
     Configuration freeMarkerConfig
-    
+
     @Autowired
     GrailsApplication grailsApplication
 
     @Value('${grails.codegen.defaultPackage}')
     public String defaultPackage
-
-
-    def generateTest(){
-        // Create the root hash
-        Map<String, Object> root = new HashMap<>()
-        root.put("name", "sisterofdc")
-        generateFunction("batchUpload.ftl",root)
-    }
 
 
     def generateListGSPFile(String domainName){
@@ -81,8 +79,11 @@ class GenerateService {
                 ftlInputData.put("classPropertiesTable",classPropertiesTable)
                 ftlInputData.put("classPropertiesDate",classPropertiesDate)
                 def fileName ="list.gsp"
-                def filePath = "D:\\generateTest\\"+fileName
-                generateFunctionToFile("list.ftl",ftlInputData,filePath)
+                return [
+                        "templateFile":"list.ftl",
+                        "ftlInputData":ftlInputData,
+                        "fileName":fileName,
+                ]
             }
         }
     }
@@ -130,8 +131,12 @@ class GenerateService {
                 ftlInputData.put("classPropertiesInput",classPropertiesInput)
                 ftlInputData.put("classPropertiesDate",classPropertiesDate)
                 def fileName ="edit.gsp"
-                def filePath = "D:\\generateTest\\"+fileName
-                generateFunctionToFile("edit.ftl",ftlInputData,filePath)
+                return [
+                        "templateFile":"edit.ftl",
+                        "ftlInputData":ftlInputData,
+                        "fileName":fileName,
+                ]
+
             }
         }
     }
@@ -185,8 +190,11 @@ class GenerateService {
                 }
                 ftlInputData.put("classPropertiesQuery",classPropertiesQuery)
                 def fileName =domainName+"Controller.groovy"
-                def filePath = "D:\\generateTest\\"+fileName
-                generateFunctionToFile("Controller.groovy.ftl",ftlInputData,filePath)
+                return [
+                        "templateFile":"Controller.groovy.ftl",
+                        "ftlInputData":ftlInputData,
+                        "fileName":fileName,
+                ]
             }
         }
     }
@@ -210,6 +218,47 @@ class GenerateService {
             throw new RuntimeException(e)
         }
     }
+
+    void generateFunctionsToZipAndSendResponse(List<String> templateFiles, List<Map<String, Object>> objs, List<String> fileNames, HttpServletResponse response) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream);
+
+            for (int i = 0; i < templateFiles.size(); i++) {
+                String templateFile = templateFiles.get(i);
+                Map<String, Object> obj = objs.get(i);
+                String filename = fileNames.get(i);
+
+                Template temp = freeMarkerConfig.getTemplate(templateFile);
+                ByteArrayOutputStream templateByteArrayOutputStream = new ByteArrayOutputStream();
+                Writer fileWriter = new OutputStreamWriter(templateByteArrayOutputStream);
+
+                temp.process(obj, fileWriter);
+                fileWriter.flush();
+
+                ZipEntry zipEntry = new ZipEntry(filename);
+                zipOut.putNextEntry(zipEntry);
+                zipOut.write(templateByteArrayOutputStream.toByteArray());
+                zipOut.closeEntry();
+            }
+
+            zipOut.close();
+            byteArrayOutputStream.close();
+
+            // Set response headers
+            response.setContentType("application/zip");
+            response.setHeader("Content-Disposition", "attachment; filename=generated.zip");
+
+            // Write the zip file to the response
+            ServletOutputStream outputStream = response.getOutputStream();
+            outputStream.write(byteArrayOutputStream.toByteArray());
+            outputStream.flush();
+            outputStream.close();
+        } catch (TemplateException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     /**
      * 用的 System.out.println 输出参数，更多的用于测试
@@ -278,12 +327,15 @@ class GenerateService {
                                 generate.domainVariableName = lowercaseFirstClassName(domainName)
                                 generate.classProperty = field.name
                                 generate.propertyType = field.type.name
-//                                先弄几个简单的，查询类型
-                                if (field.type.name=="java.lang.String"){
-                                    generate.query = "input"
-                                }else if (field.type.name=="java.util.Date"){
-                                    generate.query = "dateInput"
-                                }
+//                                这里改成前端选择
+//                                先弄几个简单的，查询类型，更多的类型判断
+//                                if (field.type.name=="java.lang.String"){
+//                                    generate.query = "input"
+//                                }else if (field.type.name=="java.util.Date"){
+//                                    generate.query = "dateInput"
+//                                }else if (field.type.name==""){
+//
+//                                }
                                 generate.inquiryMode="相等查询"
 //                            默认为启用模式
                                 generate.status = "启用"
