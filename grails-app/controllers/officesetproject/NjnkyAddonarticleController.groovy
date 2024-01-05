@@ -1,11 +1,16 @@
 package officesetproject
 
 import grails.converters.JSON
+import grails.gorm.transactions.Transactional
 import org.springframework.validation.BindingResult
 
-class FileSystemController {
+
+@Transactional
+class NjnkyAddonarticleController {
 
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
+
+// 表格生成
 
     def list(){
         if (request.method == "POST"){
@@ -15,37 +20,24 @@ class FileSystemController {
                 page = page - 1
             }
             params.offset = page * limit
-            def criteria = FileInfo.createCriteria()
+            def criteria = NjnkyAddonarticle.createCriteria()
             def results = criteria.list(max: params.limit, offset: params.offset) {
-                // 查询文件位置
-                if(params.fileLocation){
-                    eq('fileLocation', params.fileLocation)
+                // 查询内容
+                if(params.body){
+                    ilike('body', '%' + params.body + '%')
                 }
-                // 查询文件夹名
-                if(params.fileBucket){
-                    eq('fileBucket', params.fileBucket)
+                // 查询栏目
+                if(params.typeid){
+                    eq('typeid', Short.valueOf(params.typeid))
                 }
-                // 查询文件原始名字
-                if(params.fileOriginName){
-                    ilike('fileOriginName', '%' + params.fileOriginName + '%')
+                // 查询自定义模板
+                if(params.templet){
+                    ilike('templet', '%' + params.templet + '%')
                 }
-                // 查询文件KB大小
-                if(params.fileSizeKb){
-                    eq('fileSizeKb', params.fileSizeKb)
+                // 查询跳转URL
+                if(params.redirecturl){
+                    ilike('redirecturl', '%' + params.redirecturl + '%')
                 }
-                // 查询文件大小信息
-                if(params.fileSizeInfo){
-                    eq('fileSizeInfo', params.fileSizeInfo)
-                }
-                // 查询文件存储名
-                if(params.fileObjectName){
-                    eq('fileObjectName', params.fileObjectName)
-                }
-                // 查询文件位置
-                if(params.filePath){
-                    eq('filePath', params.filePath)
-                }
-                order('dateCreated', 'desc')
             }
             def result = [
                     code : 0, msg: "",
@@ -58,14 +50,16 @@ class FileSystemController {
         }
     }
 
+// 查看功能
+
     def edit() {
         if (request.method == "POST") {
             if (params.id && params.id =~ /^[0-9]*$/) {
-                def fileInfo = FileInfo.get(params.long("id"))
-                if (fileInfo) {
+                def njnkyAddonarticle = NjnkyAddonarticle.get(params.long("id"))
+                if (njnkyAddonarticle) {
                     def successResponseData = [
                             "code":200,
-                            "data":fileInfo,
+                            "data":njnkyAddonarticle,
                     ]
                     render successResponseData as JSON
                 } else {
@@ -79,21 +73,19 @@ class FileSystemController {
         }
     }
 
-
+// 保存功能
 
     def save() {
-        def fileInfo
+        def njnkyAddonarticle
         if (params.id) {
-            fileInfo = FileInfo.get(params.long("id"))
-            fileInfo.properties = params as BindingResult
+            njnkyAddonarticle = NjnkyAddonarticle.get(params.long("id"))
+            njnkyAddonarticle.properties = params as BindingResult
         } else {
-            fileInfo = new FileInfo(params)
+            njnkyAddonarticle = new NjnkyAddonarticle(params)
         }
 
-
-
-        if (!fileInfo.hasErrors() && fileInfo.validate()) {
-            if (fileInfo.save(failOnError: true)) {
+        if (!njnkyAddonarticle.hasErrors() && njnkyAddonarticle.validate()) {
+            if (njnkyAddonarticle.save(failOnError: true)) {
                 def result = [code: 200, text: params.id ? "更新成功" : "新增成功"]
                 render result as JSON
             } else {
@@ -101,11 +93,14 @@ class FileSystemController {
                 render result as JSON
             }
         } else {
-            println fileInfo.errors
-            def result = [code: 500, text: fileInfo.errors.toString().replaceAll(/["'\n]/, '')]
+            println njnkyAddonarticle.errors
+            def result = [code: 500, text: njnkyAddonarticle.errors.toString().replaceAll(/["'\n]/, '')]
             render result as JSON
         }
     }
+
+// 删除为危险操作，请添加权限验证
+// 当前操作为批量操作
 
     def cmd() {
         if (request.method == "POST") {
@@ -113,9 +108,9 @@ class FileSystemController {
             if (ids) {
                 ids.each { id ->
                     if (id && id =~ /^[0-9]*$/) {
-                        def fileInfo = FileInfo.get(id)
+                        def njnkyAddonarticle = NjnkyAddonarticle.get(id)
                         if (params.cmd == "delete") {
-                            fileInfo?.delete(failOnError: true)
+                            njnkyAddonarticle?.delete(failOnError: true)
                         }
                     }
                 }
@@ -125,5 +120,4 @@ class FileSystemController {
             render ([code: 400, text: "请求方式错误"] as JSON)
         }
     }
-
 }

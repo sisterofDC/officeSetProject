@@ -82,7 +82,9 @@ dependencies {
     implementation group: 'org.freemarker', name: 'freemarker', version: '2.3.32'
 //    Java poi 的依赖库
     implementation 'org.apache.poi:poi:5.2.3'
+    implementation 'org.apache.poi:poi-scratchpad:5.2.3'
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
+
     implementation 'org.apache.commons:commons-csv:1.10.0'
     implementation 'org.ehcache:ehcache:3.10.8'
     implementation 'commons-io:commons-io:2.15.1'

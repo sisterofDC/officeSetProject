@@ -10,7 +10,6 @@
 <html>
 <head>
     <title>Word文件预览界面</title>
-
     <asset:javascript src="jquery-3.5.1.min.js"/>
     <asset:javascript src="bootstrap.js"/>
     <asset:stylesheet src="bootstrap.css"/>
@@ -18,8 +17,6 @@
     <asset:javascript src="docx-preview.js"/>
     <asset:javascript src="thumbnail.example.js"/>
     <asset:stylesheet src="thumbnail.example.css"/>
-%{--    编辑框--}%
-    <asset:javascript src="plugins/ckeditor/ckeditor.js"/>
 </head>
 
 <body class="vh-100 d-flex flex-column">
@@ -29,9 +26,6 @@
 
 </div>
 
-<textarea name="ckeditorSet" id="ckeditorSet" rows="10" cols="80">
-
-</textarea>
 
 <div class="flex-grow-1 d-flex flex-row" style="height: 0;">
     <details class="docx-thumbnails h-100">
@@ -77,10 +71,6 @@
         renderDocx(ev.dataTransfer.files[0]);
     });
 
-
-    CKEDITOR.replace('ckeditorSet',{
-
-    });
 
 </script>
 </body>

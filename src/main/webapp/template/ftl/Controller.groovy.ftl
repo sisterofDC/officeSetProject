@@ -15,15 +15,15 @@ class ${domainName}Controller {
    def list(){
       if (request.method == "POST"){
          def page = (params.int('page') ?: 0)
-         def max = (params.int('max') ?: 20)
+         def limit = (params.int('limit') ?: 20)
          if (page > 0) {
             page = page - 1
          }
-         params.offset = page * max
+         params.offset = page * limit
 <#--查询的类名 -->
          def criteria = ${domainName}.createCriteria()
 <#--更改查询语句-->
-         def results = criteria.list(max: params.max, offset: params.offset) {
+         def results = criteria.list(max: params.limit, offset: params.offset) {
 <#--类名下面的参数查询-->
 <#list classPropertiesQuery as property>
             // 查询${property.classPropertyChinese}
