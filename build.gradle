@@ -91,6 +91,9 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml-full:5.2.3'
 //    poi-tl 的使用 用于word 文档的生成
     implementation 'com.deepoove:poi-tl:1.12.1'
+//    IText Core » 5.5.13.3 用于pdf 转word docx
+    implementation 'com.itextpdf:itextpdf:5.5.13.3'
+
 
 }
 

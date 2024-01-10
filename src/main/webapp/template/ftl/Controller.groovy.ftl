@@ -74,7 +74,7 @@ class ${domainName}Controller {
       def ${domainVariableName}
       if (params.id) {
          ${domainVariableName} = ${domainName}.get(params.long("id"))
-         ${domainVariableName}.properties = params as BindingResult
+         ${domainVariableName}.properties = params
       } else {
          ${domainVariableName} = new ${domainName}(params)
       }
@@ -109,7 +109,7 @@ class ${domainName}Controller {
             ids.each { id ->
                if (id && id =~ /^[0-9]*$/) {
                   def ${domainVariableName} = ${domainName}.get(id)
-// 如果需要，添加更多权限验证
+                  // 如果需要，添加更多权限验证
                   if (SpringSecurityUtils.ifAnyGranted('ROLE_系统管理员')) {
                      if (params.cmd == "delete") {
                         ${domainVariableName}?.delete(failOnError: true)
@@ -124,4 +124,43 @@ class ${domainName}Controller {
       }
    }
 
+   def sessionFactory
+
+   def batchUpload() {
+      if (request.method == "POST") {
+         //处理JSON请求
+         def jsonRequest = request.JSON
+         def successSaveArray = []
+         def failSaveArray = []
+         if (jsonRequest["data"]==null){
+            render ([code: 200, text: "无数据，操作失败"] as JSON)
+         }else {
+            def uploadListData = jsonRequest["data"]
+            uploadListData.each { ${domainVariableName}Data ->
+               def ${domainVariableName} = new ${domainName}(${domainVariableName}Data)
+               // 创建新的实例的时候做好参数验证
+               // -------------添加更多的参数验证-------------
+
+
+
+               // -------------添加更多的参数验证-------------
+
+
+               ${domainVariableName}.save()
+            }
+            // 批量一次性更新
+            sessionFactory.currentSession.flush();
+            sessionFactory.currentSession.clear();
+            def result = [
+               status: 200,
+               msg: "上传成功",
+               successArray: successSaveArray,
+               failArray: failSaveArray,
+            ]
+            render result as JSON
+         }
+      } else {
+         render(view: "batchUpload")
+      }
+   }
 }
