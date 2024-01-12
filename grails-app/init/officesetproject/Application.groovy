@@ -4,12 +4,17 @@ import freemarker.template.Configuration
 import freemarker.template.TemplateExceptionHandler
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
+import grails.core.GrailsApplication
 import groovy.transform.CompileStatic
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 
 @CompileStatic
 @org.springframework.context.annotation.Configuration
 class Application extends GrailsAutoConfiguration {
+
+    @Autowired
+    GrailsApplication grailsApplication
 
     /**
      * 这个是FreeMaker的初始化，会返回一个FreeMaker配置好的 configuration 的单列
@@ -39,6 +44,39 @@ class Application extends GrailsAutoConfiguration {
             throw new RuntimeException("没有找到模板文件夹目录", e);
         }
         return freeMarkerCfg;
+    }
+
+
+    /**
+     * 文件保存路径的设置
+     * 这里就吧整个文件系统的东西初始化了
+     * @return
+     */
+    @Bean
+    public String systemSavePathConfig(){
+        String fileSystemFolderName = "fileSystem"
+        System.out.println("文件系统初始化")
+//        默认文件夹
+        String defaultBucketName = "defaultBucket"
+//        获取目录
+        File directory = grailsApplication.mainContext.getResource(fileSystemFolderName).getFile()
+        if (!directory.exists()){
+            System.out.println("文件系统文件夹创建中")
+            Boolean resultMkdir =directory.mkdir()
+            if (resultMkdir){
+                System.out.println("文件系统文件夹创建成功")
+            }else {
+                throw new RuntimeException("创建文件夹失败");
+            }
+        }else {
+            System.out.println("文件夹存在初始化完成")
+            System.out.println("文件系统保存目录:"+directory.getPath())
+            File defaultBucket = new File(directory.getPath()+File.separator+defaultBucketName)
+            if (!defaultBucket.exists()){
+                defaultBucket.mkdir()
+            }
+        }
+        return directory.getPath()
     }
 
 

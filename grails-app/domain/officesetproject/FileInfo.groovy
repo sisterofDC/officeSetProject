@@ -2,7 +2,7 @@ package officesetproject
 
 class FileInfo {
 
-    /** * 文件存储位置（1:阿里云，2:腾讯云，3:minio，4:本地）*/
+    /** * 文件存储位置（1:服务器本地,2:阿里云，3:腾讯云，4:minio，5其他云盘）*/
      Integer fileLocation
     /** * 文件仓库*/
      String fileBucket
@@ -32,7 +32,15 @@ class FileInfo {
     }
 
     static constraints = {
-
-
+        fileLocation(nullable: false,inList: [1,2,3,4,5])
+        fileBucket(nullable: false,blank: false,maxSize:5000)
+        fileOriginName(nullable: true,blank: true,maxSize:5000)
+        fileSuffix(nullable: true,blank: true)
+        fileSizeKb(nullable: false)
+        fileSizeInfo(nullable:false,blank: false)
+        fileObjectName(nullable:false,blank: false)
+        filePath(nullable:false,blank: false)
+        createUser(nullable: true,blank: true)
+        lastUpdatedBy(nullable: true,blank: true)
     }
 }

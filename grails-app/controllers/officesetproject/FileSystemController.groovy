@@ -2,8 +2,11 @@ package officesetproject
 
 import grails.converters.JSON
 import org.springframework.validation.BindingResult
+import org.springframework.web.multipart.MultipartFile
+
 
 class FileSystemController {
+    FileSystemService fileSystemService
 
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
 
@@ -90,8 +93,6 @@ class FileSystemController {
             fileInfo = new FileInfo(params)
         }
 
-
-
         if (!fileInfo.hasErrors() && fileInfo.validate()) {
             if (fileInfo.save(failOnError: true)) {
                 def result = [code: 200, text: params.id ? "更新成功" : "新增成功"]
@@ -125,5 +126,40 @@ class FileSystemController {
             render ([code: 400, text: "请求方式错误"] as JSON)
         }
     }
+
+    def upload(){
+        if (request.method=="POST"){
+
+        }else {
+            render(view: "upload")
+        }
+    }
+
+    def uploadFile(){
+/*
+文件上传之前需要在application.yml 中进行配置
+grails:
+    controllers:
+        upload:
+            maxFileSize: 2000000
+            maxRequestSize: 2000000
+
+把默认的文件上传大小改大
+
+        大致思路:
+        1、有统一文件夹目录生成命名
+        2、上传文件后 生成的文件名 就是ID名
+        3、获取文件原始名称
+
+ */
+        MultipartFile file = params["file"]
+        if (file.empty) {
+            def result = [code: 500, text: "失败"]
+            render(result as JSON)
+        }else {
+            render ([code: 200,data: fileSystemService.uploadFile(file)] as JSON)
+        }
+    }
+
 
 }

@@ -111,6 +111,7 @@
 
     // 时间渲染的方法
     function renderLaydate() {
+
 /*
     如果想要不同的选择器 更新 type 标签里面的内容
     year 年选择器，只提供年列表选择
