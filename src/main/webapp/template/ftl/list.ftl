@@ -260,6 +260,7 @@
                 "cmd":commandType,
             },
             success: function (response) {
+                console.log("服务器应答参数",response)
                 if (response.code===200){
                     layer.msg(response.text, function() {time:2000});
                     // 操作完后刷新table

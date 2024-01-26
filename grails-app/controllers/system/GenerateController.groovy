@@ -1,6 +1,7 @@
-package officesetproject
+package system
 
 import grails.converters.JSON
+import officesetproject.Generate
 
 class GenerateController {
 
@@ -59,21 +60,15 @@ class GenerateController {
     def beginGenerate(){
         if (request.method == "POST"){
             String domainName = params.get("domainName")
+//            生成对应的
             def list = generateService.generateListGSPFile(domainName)
-//   （TODO）:（ sisterofdc，2024.01.04） 这里到时候改一下文件生成目录
-            def listFilePath = "D:\\generateTest\\"+ list["fileName"]
-            generateService.generateFunctionToFile("list.ftl", list["ftlInputData"],listFilePath)
-
-
+            generateService.generateFunctionToFile("list.ftl", list["ftlInputData"],list["fileName"],domainName)
             def edit =generateService.generateEditGSPFile(domainName)
-            def editFilePath = "D:\\generateTest\\"+edit["fileName"]
-            generateService.generateFunctionToFile("edit.ftl",edit["ftlInputData"],editFilePath)
-
+            generateService.generateFunctionToFile("edit.ftl",edit["ftlInputData"],edit["fileName"],domainName)
             def controller =generateService.generateControllerGroovyFile(domainName)
-            def controllerFilePath = "D:\\generateTest\\"+controller["fileName"]
-            generateService.generateFunctionToFile("Controller.groovy.ftl",controller["ftlInputData"],controllerFilePath)
-
-
+            generateService.generateFunctionToFile("Controller.groovy.ftl",controller["ftlInputData"],controller["fileName"],domainName)
+            def batchUpload = generateService.generateBatchUploadFile(domainName)
+            generateService.generateFunctionToFile("batchUpload.ftl",batchUpload["ftlInputData"],controller["fileName"],domainName)
             def successResponseData = [
                     "code":200,
                     "text":"代码生成成功",
@@ -88,15 +83,20 @@ class GenerateController {
         }
     }
 
+    /**
+     * 保存为ZIP文件
+     * @return zip 压缩包
+     */
     def zipFile(){
         if (request.method == "POST"){
             String domainName = params.get("domainName")
             def list = generateService.generateListGSPFile(domainName)
             def edit =generateService.generateEditGSPFile(domainName)
             def controller =generateService.generateControllerGroovyFile(domainName)
-            List<String> templateFiles = [list["templateFile"], edit["templateFile"], controller["templateFile"]]
-            List<Map<String, Object>> objs = [list["ftlInputData"], edit["ftlInputData"], controller["ftlInputData"]]
-            List<String> fileNames = [list["fileName"], edit["fileName"], controller["fileName"]]
+            def batchUpload = generateService.generateBatchUploadFile(domainName)
+            List<String> templateFiles = [list["templateFile"], edit["templateFile"], controller["templateFile"],batchUpload["templateFile"]]
+            List<Map<String, Object>> objs = [list["ftlInputData"], edit["ftlInputData"], controller["ftlInputData"],batchUpload["ftlInputData"]]
+            List<String> fileNames = [list["fileName"], edit["fileName"], controller["fileName"],batchUpload["fileName"]]
             generateService.generateFunctionsToZipAndSendResponse(templateFiles,objs,fileNames,response)
         }else {
             def errorResponseData = [

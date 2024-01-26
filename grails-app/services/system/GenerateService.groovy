@@ -1,4 +1,4 @@
-package officesetproject
+package system
 
 
 import freemarker.template.Configuration
@@ -6,6 +6,7 @@ import freemarker.template.Template
 import freemarker.template.TemplateException
 import grails.core.GrailsApplication
 import grails.gorm.transactions.Transactional
+import officesetproject.Generate
 import org.apache.tools.zip.ZipEntry
 import org.apache.tools.zip.ZipOutputStream
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,6 +30,8 @@ class GenerateService {
     @Value('${grails.codegen.defaultPackage}')
     public String defaultPackage
 
+    @Autowired
+    String systemSavePathConfig
 
     def generateListGSPFile(String domainName){
         def generateList = Generate.findAllByDomainName(domainName)
@@ -200,16 +203,94 @@ class GenerateService {
     }
 
 
+    def generateBatchUploadFile(String domainName){
+        def generateList = Generate.findAllByDomainName(domainName)
+        Map<String, Object> ftlInputData = new HashMap<>()
+        if (generateList.size()>0) {
+            Generate generateSingle = generateList.get(0)
+            String domainNameChinese = generateSingle.domainNameChinese
+            String domainVariableName = generateSingle.domainVariableName
+            String packageName = generateSingle.packageName
+//            不为空判断
+            if (domainNameChinese != "" && domainNameChinese!=null) {
+                ftlInputData.put("domainName",domainName)
+                ftlInputData.put("domainVariableName",domainVariableName)
+                ftlInputData.put("packageName",packageName)
+                List<LinkedHashMap<String,String>> classPropertiesQuery = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesParseQuery = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesTableQuery = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesConstructorQuery = new ArrayList<>()
+                generateList.each {generate ->
+                    def propertyQuery = [
+                            "classPropertyChinese":generate.classPropertyChinese,
+                            "classPropertyName":generate.classProperty,
+                    ]
+                    classPropertiesQuery.add(propertyQuery)
+                    def constructorQuery = [
+                            "classPropertyName":generate.classProperty,
+                    ]
+                    classPropertiesConstructorQuery.add(constructorQuery)
+                    def parseQuery = [
+                            "classPropertyChinese":generate.classPropertyChinese,
+                            "classPropertyName":generate.classProperty,
+                            "domainVariableName":domainVariableName,
+                    ]
+                    classPropertiesParseQuery.add(parseQuery)
+                    def tableQuery = [
+                            "classPropertyChinese":generate.classPropertyChinese,
+                            "classPropertyName":generate.classProperty,
+                    ]
+                    classPropertiesTableQuery.add(tableQuery)
+                }
+                ftlInputData.put("classPropertiesParse",classPropertiesParseQuery)
+                ftlInputData.put("classPropertiesTable",classPropertiesTableQuery)
+                ftlInputData.put("classProperties",classPropertiesQuery)
+                ftlInputData.put("classPropertiesConstructor",classPropertiesConstructorQuery)
+
+                def fileName ="batchUpload.gsp"
+                return [
+                        "templateFile":"batchUpload.ftl",
+                        "ftlInputData":ftlInputData,
+                        "fileName":fileName,
+                ]
+            }else {
+                return false
+            }
+        }
+
+    }
+
     /**
      * 写入文件
      * @param templateFile
      * @param obj
      * @param filePath
      */
-    void generateFunctionToFile(String templateFile, Map<String, Object> obj, String filePath) {
+    void generateFunctionToFile(String templateFile, Map<String, Object> obj, String fileName,String domainName) {
+//        这里进行的fileName 的凭借和目录创建
+//        有两种生成方式，
+//        第一个：是生成在项目的生成目录下
+//        （A）、用grailsApplication getResource getPath然后重新拼接字符串
+//        （B）、分别生成不同的完整路径，然后开始输出（本身东西不多）
+//        第二个：还是生成在静态目录文件下面，创建对应的目录，然后生成进去，这里不进去文件管理系统。因为是代码生成不是其他的
         try {
+//            文件创建目录
+            String generateFileDirectoryName = "generateFile"
+//            先创建主文件夹
+            File fileDirectory = new File(systemSavePathConfig+File.separator+generateFileDirectoryName)
+//            文件不存在创建目录
+            if (!fileDirectory.exists()){
+                fileDirectory.mkdir()
+            }
+//            然后创建对应类名的文件夹，然后把东西塞进去
+            File domainDirectory = new File(systemSavePathConfig+File.separator+generateFileDirectoryName+File.separator+domainName)
+            if (!domainDirectory.exists()){
+                domainDirectory.mkdir()
+            }
+//            真正的完整路径
+            fileName = systemSavePathConfig+File.separator+generateFileDirectoryName+File.separator+domainName+File.separator+fileName
             Template temp = freeMarkerConfig.getTemplate(templateFile)
-            File file = new File(filePath)
+            File file = new File(fileName)
             Writer fileWriter = new FileWriter(file)
             temp.process(obj, fileWriter)
             fileWriter.flush()
@@ -221,43 +302,44 @@ class GenerateService {
 
     void generateFunctionsToZipAndSendResponse(List<String> templateFiles, List<Map<String, Object>> objs, List<String> fileNames, HttpServletResponse response) {
         try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()
+            ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream)
 
             for (int i = 0; i < templateFiles.size(); i++) {
-                String templateFile = templateFiles.get(i);
-                Map<String, Object> obj = objs.get(i);
-                String filename = fileNames.get(i);
+                String templateFile = templateFiles.get(i)
+                Map<String, Object> obj = objs.get(i)
+                String filename = fileNames.get(i)
 
-                Template temp = freeMarkerConfig.getTemplate(templateFile);
-                ByteArrayOutputStream templateByteArrayOutputStream = new ByteArrayOutputStream();
-                Writer fileWriter = new OutputStreamWriter(templateByteArrayOutputStream);
+                Template temp = freeMarkerConfig.getTemplate(templateFile)
+                ByteArrayOutputStream templateByteArrayOutputStream = new ByteArrayOutputStream()
+                Writer fileWriter = new OutputStreamWriter(templateByteArrayOutputStream)
 
-                temp.process(obj, fileWriter);
-                fileWriter.flush();
+                temp.process(obj, fileWriter)
+                fileWriter.flush()
 
-                ZipEntry zipEntry = new ZipEntry(filename);
-                zipOut.putNextEntry(zipEntry);
-                zipOut.write(templateByteArrayOutputStream.toByteArray());
-                zipOut.closeEntry();
+                ZipEntry zipEntry = new ZipEntry(filename)
+                zipOut.putNextEntry(zipEntry)
+                zipOut.write(templateByteArrayOutputStream.toByteArray())
+                zipOut.closeEntry()
             }
 
-            zipOut.close();
-            byteArrayOutputStream.close();
+            zipOut.close()
+            byteArrayOutputStream.close()
 
             // Set response headers
-            response.setContentType("application/zip");
-            response.setHeader("Content-Disposition", "attachment; filename=generated.zip");
+            response.setContentType("application/zip")
+            response.setHeader("Content-Disposition", "attachment; filename=generated.zip")
 
             // Write the zip file to the response
-            ServletOutputStream outputStream = response.getOutputStream();
-            outputStream.write(byteArrayOutputStream.toByteArray());
-            outputStream.flush();
-            outputStream.close();
+            ServletOutputStream outputStream = response.getOutputStream()
+            outputStream.write(byteArrayOutputStream.toByteArray())
+            outputStream.flush()
+            outputStream.close()
         } catch (TemplateException | IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e)
         }
     }
+
 
 
     /**

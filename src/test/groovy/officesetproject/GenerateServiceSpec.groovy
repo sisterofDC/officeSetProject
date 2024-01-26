@@ -2,6 +2,7 @@ package officesetproject
 
 import grails.testing.services.ServiceUnitTest
 import spock.lang.Specification
+import system.GenerateService
 
 class GenerateServiceSpec extends Specification implements ServiceUnitTest<GenerateService>{
 

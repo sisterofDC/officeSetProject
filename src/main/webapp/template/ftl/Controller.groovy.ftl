@@ -128,39 +128,31 @@ class ${domainName}Controller {
 
    def batchUpload() {
       if (request.method == "POST") {
-         //处理JSON请求
-         def jsonRequest = request.JSON
-         def successSaveArray = []
-         def failSaveArray = []
-         if (jsonRequest["data"]==null){
-            render ([code: 200, text: "无数据，操作失败"] as JSON)
-         }else {
-            def uploadListData = jsonRequest["data"]
-            uploadListData.each { ${domainVariableName}Data ->
-               def ${domainVariableName} = new ${domainName}(${domainVariableName}Data)
-               // 创建新的实例的时候做好参数验证
-               // -------------添加更多的参数验证-------------
+         def indexSet = params.getLong("indexSet")
+         def ${domainVariableName} = new ${domainName}(params)
+// -------------添加更多的参数验证-------------
+// 更新和创建新的实例的时候做好参数验证
 
 
+// -------------添加更多的参数验证-------------
 
-               // -------------添加更多的参数验证-------------
-
-
-               ${domainVariableName}.save()
+         if (!${domainVariableName}.hasErrors() && ${domainVariableName}.validate()) {
+//             将上传的ID 传递回去
+            if (${domainVariableName}.save(failOnError: true)) {
+               def result = [code: 200, text:"成功上传",data:indexSet]
+               render result as JSON
+            } else {
+               def result = [code: 500, text: "失败",data:indexSet,errorMessage:"保存失败，服务器原因"]
+               render result as JSON
             }
-            // 批量一次性更新
-            sessionFactory.currentSession.flush();
-            sessionFactory.currentSession.clear();
-            def result = [
-               status: 200,
-               msg: "上传成功",
-               successArray: successSaveArray,
-               failArray: failSaveArray,
-            ]
+         } else {
+            println ${domainVariableName}.errors
+            def result = [code: 500, text: "失败",data:indexSet,errorMessage:"保存失败，请校验参数，错误信息为："+ ${domainVariableName}.errors.toString().replaceAll(/["'\n]/, '')]
             render result as JSON
          }
       } else {
          render(view: "batchUpload")
       }
    }
+
 }

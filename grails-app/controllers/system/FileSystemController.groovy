@@ -1,10 +1,12 @@
-package officesetproject
+package system
 
 import grails.converters.JSON
+import grails.gorm.transactions.Transactional
+import officesetproject.FileInfo
 import org.springframework.validation.BindingResult
 import org.springframework.web.multipart.MultipartFile
 
-
+@Transactional
 class FileSystemController {
     FileSystemService fileSystemService
 
@@ -48,6 +50,7 @@ class FileSystemController {
                 if(params.filePath){
                     eq('filePath', params.filePath)
                 }
+
                 order('dateCreated', 'desc')
             }
             def result = [
@@ -114,7 +117,7 @@ class FileSystemController {
             if (ids) {
                 ids.each { id ->
                     if (id && id =~ /^[0-9]*$/) {
-                        def fileInfo = FileInfo.get(id)
+                        def fileInfo = FileInfo.get(Long.valueOf(id))
                         if (params.cmd == "delete") {
                             fileInfo?.delete(failOnError: true)
                         }
@@ -157,9 +160,24 @@ grails:
             def result = [code: 500, text: "失败"]
             render(result as JSON)
         }else {
-            render ([code: 200,data: fileSystemService.uploadFile(file)] as JSON)
+//            这里默认上传到空的文件
+            String saveName = fileSystemService.uploadFile(file,"")
+            if (saveName!="-1"){
+                def successfullyUploaded = [code: 200,data: saveName]
+                render(successfullyUploaded as JSON)
+            }else {
+                def result = [code: 500, text: "上传失败"]
+                render(result as JSON)
+            }
         }
     }
+
+
+
+//   开始整合代码生成和数据备份的地方
+
+
+
 
 
 }

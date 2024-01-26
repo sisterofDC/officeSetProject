@@ -135,7 +135,6 @@
                 {title: '栏目',field: "typeid", },
                 {title: '自定义模板',field: "templet",hide:true },
                 {title: '跳转URL',field: "redirecturl", },
-
                 {title: '操作栏', toolbar: '#tableBar', align: 'center', width: 200, fixed: 'right'}, //最右边操作栏
             ]]
        })

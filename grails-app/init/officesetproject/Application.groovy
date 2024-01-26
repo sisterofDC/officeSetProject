@@ -4,17 +4,18 @@ import freemarker.template.Configuration
 import freemarker.template.TemplateExceptionHandler
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
-import grails.core.GrailsApplication
 import groovy.transform.CompileStatic
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
 import org.springframework.context.annotation.Bean
+import org.springframework.scheduling.annotation.AsyncConfigurer
+import org.springframework.scheduling.annotation.EnableAsync
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+
+import java.util.concurrent.Executor
 
 @CompileStatic
 @org.springframework.context.annotation.Configuration
 class Application extends GrailsAutoConfiguration {
-
-    @Autowired
-    GrailsApplication grailsApplication
 
     /**
      * 这个是FreeMaker的初始化，会返回一个FreeMaker配置好的 configuration 的单列
@@ -77,6 +78,29 @@ class Application extends GrailsAutoConfiguration {
             }
         }
         return directory.getPath()
+    }
+
+
+    @org.springframework.context.annotation.Configuration
+    @EnableAsync   //开启异步任务支持
+    class SpringTaskExecutor implements AsyncConfigurer {
+        @Override
+        /**
+         * 设置新的线程池，从线程池里面进行调用
+         */
+        Executor getAsyncExecutor() {
+            ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor()
+            taskExecutor.setCorePoolSize(5)
+            taskExecutor.setMaxPoolSize(10)
+            taskExecutor.setQueueCapacity(20)
+            taskExecutor.initialize()
+            return taskExecutor
+        }
+
+        @Override
+        AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+            return null
+        }
     }
 
 

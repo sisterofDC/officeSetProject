@@ -38,37 +38,37 @@
                                     </div>
                                 </div>
                                 <div class="layui-inline">
-                                    <label class="layui-form-label">文件原始名字：</label>
+                                    <label class="layui-form-label">原始名字：</label>
                                     <div class="layui-input-inline">
                                         <input name="fileOriginName" id="fileOriginName" class="layui-input" placeholder="请输入文件原始名字" autocomplete="off" />
                                     </div>
                                 </div>
                                 <div class="layui-inline">
-                                    <label class="layui-form-label">文件后缀：</label>
+                                    <label class="layui-form-label">后缀：</label>
                                     <div class="layui-input-inline">
                                         <input name="fileSuffix" id="fileSuffix" class="layui-input" placeholder="请输入文件后缀" autocomplete="off" />
                                     </div>
                                 </div>
                                 <div class="layui-inline">
-                                    <label class="layui-form-label">文件KB大小：</label>
+                                    <label class="layui-form-label">文件大小：</label>
                                     <div class="layui-input-inline">
                                         <input name="fileSizeKb" id="fileSizeKb" class="layui-input" placeholder="请输入文件KB大小" autocomplete="off" />
                                     </div>
                                 </div>
                                 <div class="layui-inline">
-                                    <label class="layui-form-label">文件大小信息：</label>
+                                    <label class="layui-form-label">大小信息：</label>
                                     <div class="layui-input-inline">
                                         <input name="fileSizeInfo" id="fileSizeInfo" class="layui-input" placeholder="请输入文件大小信息" autocomplete="off" />
                                     </div>
                                 </div>
                                 <div class="layui-inline">
-                                    <label class="layui-form-label">文件存储名：</label>
+                                    <label class="layui-form-label">存储名：</label>
                                     <div class="layui-input-inline">
                                         <input name="fileObjectName" id="fileObjectName" class="layui-input" placeholder="请输入文件存储名" autocomplete="off" />
                                     </div>
                                 </div>
                                 <div class="layui-inline">
-                                    <label class="layui-form-label">文件位置：</label>
+                                    <label class="layui-form-label">位置：</label>
                                     <div class="layui-input-inline">
                                         <input name="filePath" id="filePath" class="layui-input" placeholder="请输入文件位置" autocomplete="off" />
                                     </div>
@@ -118,6 +118,7 @@
         <button class="layui-btn layui-btn-sm"  type="button" lay-event="upload"><i class="layui-icon layui-icon-upload"></i>上传</button>
         <button class="layui-btn layui-btn-sm"  type="button" lay-event="add"><i class="layui-icon layui-icon-add-1"></i>新增</button>
         <button class="layui-btn layui-btn-sm"  type="button" lay-event="zipDownload"><i class="layui-icon">&#xe601;</i>打包下载</button>
+        <button class="layui-btn layui-btn-sm layui-btn-danger icon-btn" lay-event="backUpSql"><i class="layui-icon">&#xe716;</i>备份数据库文件</button>
         <button class="layui-btn layui-btn-sm layui-btn-danger icon-btn" lay-event="delete"><i class="layui-icon">&#xe640;</i>批量删除</button>
     </div>
 </script>
@@ -155,7 +156,7 @@
     function renderTable() {
         insTb = table.render({
             elem: '#dataTable',
-            url: '${r}/fileInfo/list',
+            url: '${r}/fileSystem/list',
             toolbar: '#myToolbar', //头部工具栏部分
             method: 'post', //请求方式为POST
             limits: [10,20,30,40,50,60,70,80,90,100,200,400,600,800,1000], //分页选择的地方
@@ -164,9 +165,10 @@
             cols:[[
                 {type: 'checkbox'}, //多选框
                 {title: "id",field: "id",hide:true},
-                {title: '文件位置',field: "fileLocation", },
+                {title: '文件存储位置',field: "fileLocation",templet: function(d){return  showFileLocationSet(d.fileLocation)},},
                 {title: '文件夹名',field: "fileBucket", },
                 {title: '文件原始名字',field: "fileOriginName", },
+                {title: '后缀名',field: "fileSuffix",},
                 {title: '文件KB大小',field: "fileSizeKb", },
                 {title: '文件大小信息',field: "fileSizeInfo", },
                 {title: '文件存储名',field: "fileObjectName", },
@@ -202,10 +204,14 @@
             }
 
             if (obj.event === "upload"){ //上传操作
-
+                uploadFromFileSystem()
             }
 
             if (obj.event === "zipDownload"){ //批量下载
+
+            }
+
+            if (obj.event === ""){ //备份数据库文件
 
             }
         });
@@ -262,7 +268,7 @@
             title: titleSet + '文件系统', //设置标题
             type: 2, // 格式为打开网页的iframe的子页面
             area: ['99%','99%'], //
-            content: '${r}/fileInfo/edit', // 接口地址
+            content: '${r}/fileSystem/edit', // 接口地址
             fixed: false, // 不固定
             maxmin: true,
             closeBtn:1,
@@ -290,17 +296,18 @@
     // 命令操作 ids 操作 批量操作
     function commandSet(ids,commandType) {
         $.ajax({
-            url: '${r}/fileInfo/cmd',
+            url: '${r}/fileSystem/cmd',
             method: "POST",
             data: {
                 "ids":ids,
                 "cmd":commandType,
             },
             success: function (response) {
+                console.log("服务器应答参数",response)
                 if (response.code===200){
                     layer.msg(response.text, function() {time:2000});
                     // 操作完后刷新table
-                    insTb.reload();
+                    insTb.reload({page: {curr: 1}});
                 }else {
                     console.log(response)
                     layer.msg("服务器错误", function() {time:2000});
@@ -313,6 +320,54 @@
         });
     }
 
+    function uploadFromFileSystem() {
+        layer.open({
+            title: "文件上传", //设置标题
+            type: 2, // 格式为打开网页的iframe的子页面
+            area: ['99%','99%'], //
+            content: '${r}/fileSystem/upload', // 接口地址
+            fixed: false, // 不固定
+            maxmin: true,
+            closeBtn:1,
+            shadeClose: true,
+            btnAlign: 'c',
+            end: function () {
+                // 子页面关闭的时候刷新表格
+                insTb.reload();
+            },
+        });
+    }
+
+    function showFileLocationSet(fileLocation) {
+        switch (fileLocation) {
+            case 1:
+                return "服务器本地";
+            case 2:
+                return "阿里云";
+            case 3:
+                return "腾讯云";
+            case 4:
+                return "minio";
+            case 5:
+                return "其他云盘";
+            default:
+                return "无效数字";
+        }
+    }
+
+    /**
+     * 打包下载
+     */
+    function zipDownloadSet() {
+
+    }
+
+    /**
+     * 备份数据库
+     */
+    function sqlFileBackUp() {
+
+    }
 
 </script>
 

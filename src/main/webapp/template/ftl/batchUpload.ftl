@@ -185,7 +185,7 @@
      * 渲染layuiTable
      */
     function renderTable() {
-        let insTb = table.render({
+        insTb = table.render({
             elem: '#dataTable',
             id : "dataTable",
             cols: [[     //标题栏
@@ -223,7 +223,45 @@
     function renderButton() {
         let submitButton = $("#submitButton")
         submitButton.click(function () {
-
+        //     为了保证上传成功的成功，还是不做回滚处理
+            if (showTableData!==null){
+                //     如果要上传成功先建立映射的MAP，上传后用于更改上传结果的MAP
+                let resultMap = new Map()
+                $.each(showTableData,function (index,value) {
+                    resultMap.set(value.indexSet,value)
+                })
+                $.each(showTableData,function (index,value) {
+                    //     开始上传
+                    $.ajax({
+                        <#--  本身的用于提交的${r} 需要注释 -->
+                        url: '<#noparse>${r}</#noparse>/${domainVariableName}/batchUpload',
+                        method: "POST",
+                        data: value,
+                        // 保证每次上传完了再进行下一个，这里可以做进度条，等会来集成
+                        async: false,
+                        success: function (response) {
+                            console.log("上传结果",response)
+                            if (response.code===200){
+                                let indexFind = response.data
+                                let setResult =  resultMap.get(indexFind)
+                                setResult.uploadResult="上传成功"
+                            }else {
+                                let indexFind = response.data
+                                let setResult =  resultMap.get(indexFind)
+                                setResult.uploadResult=response.errorMessage
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error:",xhr, status, error);
+                        }
+                    });
+                })
+                //     上传结束后，重新渲染页面 待办事宜（TODO）:（ “sisterofdc”，还需要优化这个]）
+                let show= Array.from(resultMap.values());
+                insTb.reload(show)
+            }else {
+                layer.msg("请选择数据", function() {time:2000});
+            }
         })
     }
 
