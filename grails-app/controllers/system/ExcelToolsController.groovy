@@ -1,6 +1,7 @@
-package officesetproject
+package system
 
 import grails.converters.JSON
+import system.ExcelToolsService
 
 class ExcelToolsController {
     ExcelToolsService excelToolsService
@@ -45,5 +46,27 @@ class ExcelToolsController {
             ]
             render(errorResponseData as JSON)
         }
+    }
+
+
+    /**
+     * 转为HTML 然后转成 PDF
+     */
+    def convertToHTML(){
+
+    }
+
+    /**
+     * 导出所有数据
+     */
+    def ExportAllData(){
+
+    }
+
+    /**
+     * 导出为PDF
+     */
+    def excelToPDF(){
+
     }
 }

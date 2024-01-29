@@ -1,11 +1,16 @@
 package system
 
+import cn.hutool.core.util.IdUtil
 import grails.core.GrailsApplication
 import grails.gorm.transactions.Transactional
 import officesetproject.FileInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.multipart.MultipartFile
-
+import org.apache.tools.zip.ZipEntry
+import org.apache.tools.zip.ZipOutputStream
+import javax.servlet.http.HttpServletResponse
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.text.DecimalFormat
 
 @Transactional
@@ -23,8 +28,8 @@ class FileSystemService {
     public String uploadFile(MultipartFile file,String fileBucket){
 //        原始名字
         String originalFilename = file.getOriginalFilename()
-//        文件名  用的是UUID 的随机数加 hash 的toString
-        String saveName= UUID.randomUUID().hashCode().toString()
+//        文件名  直接生成一个雪花ID就行了，因为grails用的id 自增
+        String saveName= IdUtil.getSnowflakeNextIdStr()
 //        获取文件后缀
         String fileSuffix = "";
 //        得到后缀名
@@ -106,4 +111,80 @@ class FileSystemService {
         }
     }
 
+    /**
+     * 下载之前，操作之前，
+     * @param fileInfoList
+     * @return
+     */
+    Boolean checkAllFile(List<FileInfo> fileInfoList){
+        fileInfoList.each {it->
+            if (checkFile(it)==false){
+                return false
+            }
+        }
+        return true
+    }
+
+
+    /**
+     *
+     * @param fileInfo
+     * @return Boolean 文件是否存在 true 是存在
+     */
+    Boolean checkFile(FileInfo fileInfo){
+        return Files.exists(Paths.get(fileInfo.filePath))
+    }
+
+
+    /**
+     * zip下载
+     * @param fileInfoList
+     * @param response
+     */
+    void batchZipDownload(List<FileInfo> fileInfoList, HttpServletResponse response){
+        if (checkAllFile(fileInfoList)){
+            ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())
+            try {
+                response.setContentType("application/zip");
+                response.setHeader("Content-Disposition", "attachment; filename=\"batchFiles.zip\"");
+                fileInfoList.each {fileInfo->
+                    def filePath = fileInfo.filePath
+                    def fileOriginName = fileInfo.fileOriginName
+                    FileInputStream fis = new FileInputStream(filePath)
+                    ZipEntry zipEntry = new ZipEntry(fileOriginName);
+                    zipOut.putNextEntry(zipEntry);
+                    byte[] bytes = new byte[1024];
+                    int length;
+                    while ((length = fis.read(bytes)) >= 0) {
+                        zipOut.write(bytes, 0, length);
+                    }
+                    fis.close()
+                    zipOut.closeEntry();
+                }
+            }catch (IOException e){
+                println(e)
+            }finally {
+                zipOut.flush()
+                zipOut.close()
+                response.getOutputStream().close()
+            }
+        }
+    }
+
+
+    /**
+     * 删除文件
+     */
+    void deleteFile(FileInfo fileInfo){
+        try {
+            Files.delete(Paths.get(fileInfo.filePath));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void downloadSingleFile(FileInfo, HttpServletResponse response){
+
+    }
 }

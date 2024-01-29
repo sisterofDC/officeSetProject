@@ -1,9 +1,9 @@
-package officesetproject
+package system
 
-import grails.testing.gorm.DomainUnitTest
+import grails.testing.services.ServiceUnitTest
 import spock.lang.Specification
 
-class NjnkyAddonarticleSpec extends Specification implements DomainUnitTest<NjnkyAddonarticle> {
+class ServeRenderingServiceSpec extends Specification implements ServiceUnitTest<ServeRenderingService>{
 
     def setup() {
     }

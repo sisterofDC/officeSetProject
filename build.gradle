@@ -93,7 +93,12 @@ dependencies {
     implementation 'com.deepoove:poi-tl:1.12.1'
 //    IText Core » 5.5.13.3 用于pdf 转word docx
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
-
+//    hutool-all 的引入，工具了类
+    implementation 'cn.hutool:hutool-all:5.8.16'
+// https://mvnrepository.com/artifact/com.google.guava/guava google JAVA 工具类
+    implementation 'com.google.guava:guava:33.0.0-jre'
+// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java 服务端生成网页用的
+    implementation 'org.seleniumhq.selenium:selenium-java:4.17.0'
 
 }
 

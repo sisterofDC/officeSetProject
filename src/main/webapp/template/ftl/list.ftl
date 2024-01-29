@@ -172,16 +172,18 @@
             }
         });
 
+        // 右边操作栏部分
         table.on('tool(dataTable)', function (obj) {
             /* 删除 */
             if (obj.event === 'delete') {
                 // 删除要提醒
-                layer.confirm('确定要操作该数据吗？', {
+                let index = layer.confirm('确定要操作该数据吗？', {
                     skin: 'layui-layer-admin',
                     shade: .1
                 }, function () {
                     let objID = obj.data.id
                     commandSet(objID,"delete")
+                    layer.close(index)
                 });
             }
 

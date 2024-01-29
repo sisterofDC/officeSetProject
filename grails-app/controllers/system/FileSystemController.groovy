@@ -50,7 +50,14 @@ class FileSystemController {
                 if(params.filePath){
                     eq('filePath', params.filePath)
                 }
-
+//                这里看生成方式 配置和设定
+                if(params.dateCreated){
+                    def dateArray = params.get('dateCreated').toString().split(' - ')
+                    def startDate = Date.parse('yyyy-MM-dd HH:mm:ss', dateArray[0])
+                    def endDate = Date.parse('yyyy-MM-dd HH:mm:ss',  dateArray[1])
+                    ge('dateCreated',startDate)
+                    le('dateCreated',endDate)
+                }
                 order('dateCreated', 'desc')
             }
             def result = [
@@ -119,6 +126,10 @@ class FileSystemController {
                     if (id && id =~ /^[0-9]*$/) {
                         def fileInfo = FileInfo.get(Long.valueOf(id))
                         if (params.cmd == "delete") {
+//                            先删除文件
+                            if (fileSystemService.checkFile(fileInfo)){
+                                fileSystemService.deleteFile(fileInfo)
+                            }
                             fileInfo?.delete(failOnError: true)
                         }
                     }
@@ -172,12 +183,36 @@ grails:
         }
     }
 
+    def zipDownload(){
+        if (request.method == "POST") {
+            def ids = params.ids?.trim()?.tokenize(',')
+            if (ids) {
+                List<FileInfo> fileInfoList = new ArrayList<>()
+                ids.each { id ->
+                    if (id && id =~ /^[0-9]*$/) {
+                        fileInfoList.add(FileInfo.findById(id))
+                    }
+                }
+                fileSystemService.batchZipDownload(fileInfoList,response)
+            }
+        } else {
+            render ([code: 400, text: "请求方式错误"] as JSON)
+        }
+    }
 
+//    单独下载  待办事宜（TODO）:（ 王绎新，2024.01.26，[]等着单独的文件下载界面）
+    def singleDownload(){
+        if (request.method == "POST") {
+            def fileId = params.fileId
+            def fileObjectName = params.fileObjectName
+            if (fileId){
 
-//   开始整合代码生成和数据备份的地方
+            }
+            if (fileObjectName){
 
-
-
-
-
+            }
+        } else {
+            render ([code: 400, text: "请求方式错误"] as JSON)
+        }
+    }
 }

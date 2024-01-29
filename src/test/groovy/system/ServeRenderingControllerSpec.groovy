@@ -1,10 +1,9 @@
-package officesetproject
+package system
 
 import grails.testing.web.controllers.ControllerUnitTest
 import spock.lang.Specification
-import system.ExcelToolsController
 
-class ExcelToolsControllerSpec extends Specification implements ControllerUnitTest<ExcelToolsController> {
+class ServeRenderingControllerSpec extends Specification implements ControllerUnitTest<ServeRenderingController> {
 
     def setup() {
     }

@@ -7,15 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <%def r=request.contextPath%>
     <title>文件系统表格</title>
-
     <asset:javascript src="jquery-3.5.1.min.js"/>
     <asset:stylesheet src="plugins/layui/css/layui.css" />
     <asset:javascript src="plugins/layui/layui.js"/>
-
 </head>
 
 <body>
-
 <div class="layui-bg-gray" style="padding: 16px;">
     <div class="layui-row layui-col-space15">
         <div class="layui-col-md12">
@@ -73,7 +70,12 @@
                                         <input name="filePath" id="filePath" class="layui-input" placeholder="请输入文件位置" autocomplete="off" />
                                     </div>
                                 </div>
-
+                            <div class="layui-inline">
+                                <label class="layui-form-label">创建日期：</label>
+                                <div class="layui-input-inline">
+                                    <input name="dateCreated" id="dateCreated" class="layui-input" placeholder="请输入创建日期" autocomplete="off" />
+                                </div>
+                            </div>
 
 
                             <div class="layui-inline">&emsp;
@@ -132,6 +134,8 @@
     const laydate = layui.laydate;
     const dropdown = layui.dropdown;
     const util = layui.util;
+    let taskId /**任务 ID */
+    let intervalId /** 循环执行任务的线程ID  */
     // 表格的参数 用于   insTb.reload();
     let insTb
     // 方法初始化的地方
@@ -150,6 +154,12 @@
         time 时间选择器，只提供时、分、秒选择
         datetime 日期时间选择器，可选择：年月日、时分秒
          */
+        laydate.render({
+            elem: "#dateCreated",
+            type: 'date',
+            range: true,
+            rangeLinked: true, //是否开启日期范围选择时的区间联动标注模式，该模式必须开启 range 属性才能生效
+        });
     }
 
     // 表格的渲染方法
@@ -173,6 +183,7 @@
                 {title: '文件大小信息',field: "fileSizeInfo", },
                 {title: '文件存储名',field: "fileObjectName", },
                 {title: '文件位置',field: "filePath", },
+                {title: '创建日期',field: "dateCreated", templet:"<div>{{layui.util.toDateString(d.dateCreated, 'yyyy-MM-dd')}}</div>",},
                 {title: '操作栏', toolbar: '#tableBar', align: 'center', width: 200, fixed: 'right'}, //最右边操作栏
             ]]
        })
@@ -208,14 +219,35 @@
             }
 
             if (obj.event === "zipDownload"){ //批量下载
-
+                let checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要操作的数据', {icon: 2});
+                    return;
+                }
+                let objID=checkRows.data.map(function(item) {
+                    return item.id;
+                }).join(",");
+                let index =layer.confirm('当批量下载文件过多时候，可以会卡死服务器', {
+                    skin: 'layui-layer-admin',
+                    shade: .1
+                }, function () {
+                    zipDownloadSet(objID)
+                    layer.close(index)
+                });
             }
 
-            if (obj.event === ""){ //备份数据库文件
-
+            if (obj.event === "backUpSql"){ //备份数据库文件
+                let index = layer.confirm('确定要开始备份数据吗？可能会花费很久的事件', {
+                    skin: 'layui-layer-admin',
+                    shade: .1
+                }, function () {
+                    sqlFileBackUp()
+                    layer.close(index)
+                });
             }
         });
 
+        // 右边操作栏
         table.on('tool(dataTable)', function (obj) {
             /* 删除 */
             if (obj.event === 'delete') {
@@ -358,14 +390,104 @@
     /**
      * 打包下载
      */
-    function zipDownloadSet() {
-
+    function zipDownloadSet(data) {
+        $.ajax({
+            url: '${r}/fileSystem/zipDownload',
+            method: "POST",
+            data: {
+                "ids":data,
+            },
+            xhrFields: {
+                responseType: 'blob' // Set the responseType to 'blob' here
+            },
+            success: function(data, status, xhr) {
+                let blob = new Blob([data], { type: 'application/octet-stream;charset=UTF-8' });
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = url;
+                a.download = "打包文件.zip"
+                a.click();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                layer.alert("服务器出现问题");
+                console.error("Error:",xhr, status, error);
+            }
+        });
     }
 
     /**
      * 备份数据库
      */
     function sqlFileBackUp() {
+        $.ajax({
+            type: 'GET',
+            url: ' ${r}/SaveSqlFile/getCreateNewSqlFile',
+            success: function(response) {
+                // 设置任务ID
+                console.log("参数",response)
+                if(response.code===200){
+                    taskId=response.data
+                    checkTaskCondition()
+                }else {
+                    layer.msg("服务器错误", function() {time:2000});
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+            }
+        });
+    }
+
+    /**
+     * 设置的一秒钟的轮询
+     */
+    function checkTaskCondition(){
+        function sendAjaxRequest() {
+            $.ajax({
+                type: "GET",
+                url: "${r}/SaveSqlFile/taskIsOver",
+                data:{
+                    "taskId":taskId
+                },
+                success: function(response) {
+                    console.log("返回结果",response)
+                    if (response.code===200){
+                        if (response.data==="done"){
+                            // 任务加载完毕
+                            layer.msg("生成成功，即将刷新页面", {
+                                time: 1000,
+                            });
+                            clearInterval(intervalId);
+                            insTb.reload({page: {curr: 1}});
+                        }else if (response.data==="unfinished"){
+                            layer.msg("正在加载中", {
+                                time: 1000,
+                            });
+                        }
+                    }else if (response.code ===500) {
+                        console.log("Error")
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        }
+        // 将interval任务设置为全局方便调用
+        intervalId = setInterval(function () {
+            sendAjaxRequest();
+        }, 2000)
+    }
+
+
+    /**
+     * 下载一个文件通用的接口方法
+     * @param fileObjectName 服务器存储名，
+     * @param fileId 文件ID
+     */
+    //这里是需要下载为原来的文件名的一个方面
+    function downLoadSingleFile(fileObjectName,fileId) {
 
     }
 

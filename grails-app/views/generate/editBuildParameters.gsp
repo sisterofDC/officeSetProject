@@ -317,7 +317,7 @@
 
 
         downloadZipFile.click(function () {
-            layer.confirm('生成之前请核实填写完对应的中文没有？', {
+            let index = layer.confirm('生成之前请核实填写完对应的中文没有？', {
                 skin: 'layui-layer-admin',
                 shade: .1
             }, function () {
@@ -343,6 +343,7 @@
                         console.error(xhr.responseText);
                     }
                 });
+                layer.close(index)
             });
         })
     }

@@ -216,31 +216,34 @@ class GenerateService {
                 ftlInputData.put("domainName",domainName)
                 ftlInputData.put("domainVariableName",domainVariableName)
                 ftlInputData.put("packageName",packageName)
+                ftlInputData.put("domainNameChinese",domainNameChinese)
                 List<LinkedHashMap<String,String>> classPropertiesQuery = new ArrayList<>()
                 List<LinkedHashMap<String,String>> classPropertiesParseQuery = new ArrayList<>()
                 List<LinkedHashMap<String,String>> classPropertiesTableQuery = new ArrayList<>()
                 List<LinkedHashMap<String,String>> classPropertiesConstructorQuery = new ArrayList<>()
                 generateList.each {generate ->
-                    def propertyQuery = [
-                            "classPropertyChinese":generate.classPropertyChinese,
-                            "classPropertyName":generate.classProperty,
-                    ]
-                    classPropertiesQuery.add(propertyQuery)
-                    def constructorQuery = [
-                            "classPropertyName":generate.classProperty,
-                    ]
-                    classPropertiesConstructorQuery.add(constructorQuery)
-                    def parseQuery = [
-                            "classPropertyChinese":generate.classPropertyChinese,
-                            "classPropertyName":generate.classProperty,
-                            "domainVariableName":domainVariableName,
-                    ]
-                    classPropertiesParseQuery.add(parseQuery)
-                    def tableQuery = [
-                            "classPropertyChinese":generate.classPropertyChinese,
-                            "classPropertyName":generate.classProperty,
-                    ]
-                    classPropertiesTableQuery.add(tableQuery)
+                    if (generate.status=="启用"){
+                        def propertyQuery = [
+                                "classPropertyChinese":generate.classPropertyChinese,
+                                "classPropertyName":generate.classProperty,
+                        ]
+                        classPropertiesQuery.add(propertyQuery)
+                        def constructorQuery = [
+                                "classPropertyName":generate.classProperty,
+                        ]
+                        classPropertiesConstructorQuery.add(constructorQuery)
+                        def parseQuery = [
+                                "classPropertyChinese":generate.classPropertyChinese,
+                                "classPropertyName":generate.classProperty,
+                                "domainVariableName":domainVariableName,
+                        ]
+                        classPropertiesParseQuery.add(parseQuery)
+                        def tableQuery = [
+                                "classPropertyChinese":generate.classPropertyChinese,
+                                "classPropertyName":generate.classProperty,
+                        ]
+                        classPropertiesTableQuery.add(tableQuery)
+                    }
                 }
                 ftlInputData.put("classPropertiesParse",classPropertiesParseQuery)
                 ftlInputData.put("classPropertiesTable",classPropertiesTableQuery)
@@ -322,10 +325,8 @@ class GenerateService {
                 zipOut.write(templateByteArrayOutputStream.toByteArray())
                 zipOut.closeEntry()
             }
-
             zipOut.close()
             byteArrayOutputStream.close()
-
             // Set response headers
             response.setContentType("application/zip")
             response.setHeader("Content-Disposition", "attachment; filename=generated.zip")

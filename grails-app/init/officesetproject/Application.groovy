@@ -80,7 +80,6 @@ class Application extends GrailsAutoConfiguration {
         return directory.getPath()
     }
 
-
     @org.springframework.context.annotation.Configuration
     @EnableAsync   //开启异步任务支持
     class SpringTaskExecutor implements AsyncConfigurer {

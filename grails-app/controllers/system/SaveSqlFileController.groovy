@@ -30,12 +30,14 @@ class SaveSqlFileController {
             if (future.isDone()){
                 def successResponseData = [
                         "code":200,
+                        "data":"done",
                         "text":"文件生成成功",
                 ]
                 render(successResponseData as JSON)
             }else {
                 def successResponseData = [
                         "code":200,
+                        "data":"unfinished",
                         "text":"任务没有完成",
                 ]
                 render(successResponseData as JSON)
