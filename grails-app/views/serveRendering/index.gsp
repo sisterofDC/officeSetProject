@@ -9,7 +9,7 @@
 <%def r=request.contextPath%>
 <html>
 <head>
-    <title>execl文件生成界面</title><article>
+    <title>服务器渲染功能</title><article>
     <asset:javascript src="jquery-3.5.1.min.js"/>
     <asset:stylesheet src="plugins/layui/css/layui.css" />
     <asset:javascript src="plugins/layui/layui.js"/>

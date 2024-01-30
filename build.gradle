@@ -97,9 +97,8 @@ dependencies {
     implementation 'cn.hutool:hutool-all:5.8.16'
 // https://mvnrepository.com/artifact/com.google.guava/guava google JAVA 工具类
     implementation 'com.google.guava:guava:33.0.0-jre'
-// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java 服务端生成网页用的
-    implementation 'org.seleniumhq.selenium:selenium-java:4.17.0'
-
+// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java 服务端生成网页用的 直接退版本 要不新版本感觉总有问题
+    implementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
 }
 
 bootRun {

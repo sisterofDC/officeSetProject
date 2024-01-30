@@ -5,6 +5,9 @@ import freemarker.template.TemplateExceptionHandler
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
 import groovy.transform.CompileStatic
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.ChromeOptions
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.AsyncConfigurer
@@ -100,6 +103,20 @@ class Application extends GrailsAutoConfiguration {
         AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
             return null
         }
+    }
+
+//    配置网络模拟器webDriver为单列
+    @Bean
+    public ChromeDriver chromeDriverConfig(){
+        System.setProperty("webdriver.chrome.driver","D:\\chrome\\chromedriver-win64\\chromedriver.exe")
+        ChromeOptions chromeOptions = new ChromeOptions()
+        chromeOptions.addArguments("--allow-running-insecure-content")
+        chromeOptions.addArguments("--remote-allow-origins=*");
+        chromeOptions.addArguments("--start-maximized")
+        chromeOptions.addArguments("--disable-gpu")
+        chromeOptions.setBinary("D:\\chrome\\chrome-win64\\chrome.exe")
+        ChromeDriver chromeDriver = new ChromeDriver(chromeOptions)
+        return chromeDriver
     }
 
 

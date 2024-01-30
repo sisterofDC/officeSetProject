@@ -6,7 +6,7 @@ class ServeRenderingController {
     ServeRenderingService serveRenderingService
     def index() {
         if (request.method=="POST"){
-            serveRenderingService.chromeDriverSet()
+            serveRenderingService.chromeDriverPrint()
             render([code:200] as JSON)
         }else {
             render(view: "index")
