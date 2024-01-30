@@ -4,16 +4,10 @@ import grails.gorm.transactions.Transactional
 import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
 import groovy.transform.CompileStatic
-import org.apache.commons.fileupload.FileItem
-import org.apache.commons.fileupload.disk.DiskFileItemFactory
-import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.stereotype.Component
-import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.multipart.commons.CommonsMultipartFile
 
 import javax.sql.DataSource
 import java.time.LocalDate
@@ -57,24 +51,8 @@ class SaveSqlFileService {
 //        sql查询后用完后关闭
         sql.close()
 //        变成然后变成MultipartFile
-        /*
-        org.apache.commons 统一都为这个的包
-         */
-        FileItem item = new DiskFileItemFactory().createItem("file"
-//                如果这里有问题就 MediaType.TEXT_PLAIN_VALUE 等会看一下这个是什么
-                , MediaType.MULTIPART_FORM_DATA_VALUE
-                , true
-                , tempFile.getName())
-        try (InputStream input = new FileInputStream(tempFile)
-             OutputStream os = item.getOutputStream()) {
-            // 流转移
-            IOUtils.copy(input, os)
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid file: " + e, e)
-        }
-        MultipartFile multipartFile = new CommonsMultipartFile(item)
 //        然后对接文件系统的接口
-        fileSystemService.uploadFile(multipartFile,"BackUpMysqlFileDirectory")
+        fileSystemService.uploadFile(fileSystemService.convertToMultipartFileByFile(tempFile),"BackUpMysqlFileDirectory")
 //        删除临时文件
         tempFile.delete()
     }
@@ -207,9 +185,9 @@ class SaveSqlFileService {
                     }
                 }else if ("TINYINT(1)".equalsIgnoreCase(type)) {
                     if ("true".equalsIgnoreCase(value)) {
-                        valuesSet.append(1).append(", ");
+                        valuesSet.append(1).append(", ")
                     } else if ("false".equalsIgnoreCase(value)) {
-                        valuesSet.append(0).append(", ");
+                        valuesSet.append(0).append(", ")
                     }
                 } else {
 //                    实际测试中发现需要转换 ' 单冒号

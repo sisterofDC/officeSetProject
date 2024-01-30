@@ -1,14 +1,17 @@
 package officesetproject
 
+import cn.hutool.core.io.FileUtil
+import cn.hutool.system.OsInfo
 import freemarker.template.Configuration
 import freemarker.template.TemplateExceptionHandler
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
 import groovy.transform.CompileStatic
-import org.openqa.selenium.WebDriver
+
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.AsyncConfigurer
 import org.springframework.scheduling.annotation.EnableAsync
@@ -19,6 +22,13 @@ import java.util.concurrent.Executor
 @CompileStatic
 @org.springframework.context.annotation.Configuration
 class Application extends GrailsAutoConfiguration {
+//    注入进去然后检查
+    @Value('${LibreOfficeWindowsPathSet}')
+    private String libreOfficeWindowsPath;
+
+    @Value('${LibreOfficeLinuxPathSet}')
+    private String libreOfficeLinuxPath;
+
 
     /**
      * 这个是FreeMaker的初始化，会返回一个FreeMaker配置好的 configuration 的单列
@@ -108,6 +118,7 @@ class Application extends GrailsAutoConfiguration {
 //    配置网络模拟器webDriver为单列
     @Bean
     public ChromeDriver chromeDriverConfig(){
+//        这个配置 driver 需要和 对应的 chrome 对齐 然后jar包驱动是
         System.setProperty("webdriver.chrome.driver","D:\\chrome\\chromedriver-win64\\chromedriver.exe")
         ChromeOptions chromeOptions = new ChromeOptions()
         chromeOptions.addArguments("--allow-running-insecure-content")
@@ -118,6 +129,31 @@ class Application extends GrailsAutoConfiguration {
         ChromeDriver chromeDriver = new ChromeDriver(chromeOptions)
         return chromeDriver
     }
+
+//
+    @Bean
+//    配置目录
+    public String libreofficeConfigPath (){
+//        检查libreoffice 是否在指定目录
+        OsInfo osInfo = new OsInfo()
+        if (osInfo.isLinux()){
+            if (!FileUtil.exist(libreOfficeLinuxPath)){
+                println("文件不存在，请在application.yml中配置linux中的路径")
+                return ""
+            }else {
+                return libreOfficeLinuxPath
+            }
+        }else if (osInfo.isWindows()){
+            if (!FileUtil.exist(libreOfficeWindowsPath)){
+                println("文件不存在，请在application.yml中配置windows中的路径")
+                return ""
+            }else {
+                return libreOfficeWindowsPath
+            }
+        }
+    }
+
+
 
 
     static void main(String[] args) {

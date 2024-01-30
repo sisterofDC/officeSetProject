@@ -4,10 +4,16 @@ import cn.hutool.core.util.IdUtil
 import grails.core.GrailsApplication
 import grails.gorm.transactions.Transactional
 import officesetproject.FileInfo
+import org.apache.commons.fileupload.FileItem
+import org.apache.commons.fileupload.disk.DiskFileItemFactory
+import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.MediaType
 import org.springframework.web.multipart.MultipartFile
 import org.apache.tools.zip.ZipEntry
 import org.apache.tools.zip.ZipOutputStream
+import org.springframework.web.multipart.commons.CommonsMultipartFile
+
 import javax.servlet.http.HttpServletResponse
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -25,13 +31,13 @@ class FileSystemService {
 //    默认文件夹
     private String defaultBucketName = "defaultBucket"
 
-    public String uploadFile(MultipartFile file,String fileBucket){
+    String uploadFile(MultipartFile file, String fileBucket){
 //        原始名字
         String originalFilename = file.getOriginalFilename()
 //        文件名  直接生成一个雪花ID就行了，因为grails用的id 自增
         String saveName= IdUtil.getSnowflakeNextIdStr()
 //        获取文件后缀
-        String fileSuffix = "";
+        String fileSuffix = ""
 //        得到后缀名
         if (originalFilename.isEmpty()){
             fileSuffix = ""
@@ -104,7 +110,7 @@ class FileSystemService {
                 return directory.getPath()
             }else {
 //                IO 操作都是报底层错误
-                throw new RuntimeException("创建文件夹失败");
+                throw new RuntimeException("创建文件夹失败")
             }
         }else {
             return directory.getPath()
@@ -145,21 +151,21 @@ class FileSystemService {
         if (checkAllFile(fileInfoList)){
             ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())
             try {
-                response.setContentType("application/zip");
-                response.setHeader("Content-Disposition", "attachment; filename=\"batchFiles.zip\"");
+                response.setContentType("application/zip")
+                response.setHeader("Content-Disposition", "attachment; filename=\"batchFiles.zip\"")
                 fileInfoList.each {fileInfo->
                     def filePath = fileInfo.filePath
                     def fileOriginName = fileInfo.fileOriginName
                     FileInputStream fis = new FileInputStream(filePath)
-                    ZipEntry zipEntry = new ZipEntry(fileOriginName);
-                    zipOut.putNextEntry(zipEntry);
-                    byte[] bytes = new byte[1024];
-                    int length;
+                    ZipEntry zipEntry = new ZipEntry(fileOriginName)
+                    zipOut.putNextEntry(zipEntry)
+                    byte[] bytes = new byte[1024]
+                    int length
                     while ((length = fis.read(bytes)) >= 0) {
-                        zipOut.write(bytes, 0, length);
+                        zipOut.write(bytes, 0, length)
                     }
                     fis.close()
-                    zipOut.closeEntry();
+                    zipOut.closeEntry()
                 }
             }catch (IOException e){
                 println(e)
@@ -177,14 +183,60 @@ class FileSystemService {
      */
     void deleteFile(FileInfo fileInfo){
         try {
-            Files.delete(Paths.get(fileInfo.filePath));
+            Files.delete(Paths.get(fileInfo.filePath))
         }
         catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace()
         }
     }
 
     void downloadSingleFile(FileInfo, HttpServletResponse response){
 
     }
+
+    /**
+     * 通用的
+     * @param inputFile
+     * @return
+     */
+    MultipartFile convertToMultipartFileByFile(File inputFile){
+        if (inputFile.exists()){
+            FileItem item = new DiskFileItemFactory().createItem("file"
+//                如果这里有问题就 MediaType.TEXT_PLAIN_VALUE 等会看一下这个是什么
+                    , MediaType.MULTIPART_FORM_DATA_VALUE
+                    , true
+                    , inputFile.getName())
+//            将文件流进行转入
+            try (InputStream input = new FileInputStream(inputFile)
+                 OutputStream os = item.getOutputStream()) {
+                // 流转移
+                IOUtils.copy(input, os)
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid file: " + e, e)
+            }
+            MultipartFile multipartFile = new CommonsMultipartFile(item)
+            return multipartFile
+        }else {
+            println("文件不存在")
+            return null
+        }
+    }
+
+    MultipartFile convertToMultipartFileByInputStream(InputStream inputStream,String FileName){
+        FileItem item = new DiskFileItemFactory().createItem("file"
+//                如果这里有问题就 MediaType.TEXT_PLAIN_VALUE 等会看一下这个是什么
+                , MediaType.MULTIPART_FORM_DATA_VALUE
+                , true
+                , FileName)
+        try{
+            OutputStream os = item.getOutputStream()
+            IOUtils.copy(inputStream, os)
+            MultipartFile multipartFile = new CommonsMultipartFile(item)
+            return multipartFile
+        }catch (Exception e){
+            throw new IllegalArgumentException("inputStream设置失败"+e)
+        }
+    }
+
+
 }
