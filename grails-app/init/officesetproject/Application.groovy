@@ -11,7 +11,6 @@ import groovy.transform.CompileStatic
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.AsyncConfigurer
 import org.springframework.scheduling.annotation.EnableAsync
@@ -22,13 +21,6 @@ import java.util.concurrent.Executor
 @CompileStatic
 @org.springframework.context.annotation.Configuration
 class Application extends GrailsAutoConfiguration {
-//    注入进去然后检查
-    @Value('${LibreOfficeWindowsPathSet}')
-    private String libreOfficeWindowsPath;
-
-    @Value('${LibreOfficeLinuxPathSet}')
-    private String libreOfficeLinuxPath;
-
 
     /**
      * 这个是FreeMaker的初始化，会返回一个FreeMaker配置好的 configuration 的单列
@@ -46,18 +38,18 @@ class Application extends GrailsAutoConfiguration {
      */
 
     @Bean
-    public Configuration freeMarkerConfig() {
-        System.out.println("FreeMaker初始化");
+    Configuration freeMarkerConfig() {
+        System.out.println("FreeMaker初始化")
         System.out.println("FreeMarker模板文件夹目录"+grailsApplication.mainContext.getResource("template/ftl").getFile().absolutePath)
-        Configuration freeMarkerCfg = new Configuration(Configuration.VERSION_2_3_22);
-        freeMarkerCfg.setDefaultEncoding("UTF-8");
-        freeMarkerCfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        Configuration freeMarkerCfg = new Configuration(Configuration.VERSION_2_3_22)
+        freeMarkerCfg.setDefaultEncoding("UTF-8")
+        freeMarkerCfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER)
         try {
-            freeMarkerCfg.setDirectoryForTemplateLoading(grailsApplication.mainContext.getResource("template/ftl").getFile());
+            freeMarkerCfg.setDirectoryForTemplateLoading(grailsApplication.mainContext.getResource("template/ftl").getFile())
         } catch (IOException e) {
-            throw new RuntimeException("没有找到模板文件夹目录", e);
+            throw new RuntimeException("没有找到模板文件夹目录", e)
         }
-        return freeMarkerCfg;
+        return freeMarkerCfg
     }
 
 
@@ -67,7 +59,7 @@ class Application extends GrailsAutoConfiguration {
      * @return
      */
     @Bean
-    public String systemSavePathConfig(){
+    String systemSavePathConfig(){
         String fileSystemFolderName = "fileSystem"
         System.out.println("文件系统初始化")
 //        默认文件夹
@@ -80,7 +72,7 @@ class Application extends GrailsAutoConfiguration {
             if (resultMkdir){
                 System.out.println("文件系统文件夹创建成功")
             }else {
-                throw new RuntimeException("创建文件夹失败");
+                throw new RuntimeException("创建文件夹失败")
             }
         }else {
             System.out.println("文件夹存在初始化完成")
@@ -117,44 +109,76 @@ class Application extends GrailsAutoConfiguration {
 
 //    配置网络模拟器webDriver为单列
     @Bean
-    public ChromeDriver chromeDriverConfig(){
+    ChromeDriver chromeDriverConfig(){
 //        这个配置 driver 需要和 对应的 chrome 对齐 然后jar包驱动是
         System.setProperty("webdriver.chrome.driver","D:\\chrome\\chromedriver-win64\\chromedriver.exe")
         ChromeOptions chromeOptions = new ChromeOptions()
         chromeOptions.addArguments("--allow-running-insecure-content")
-        chromeOptions.addArguments("--remote-allow-origins=*");
+        chromeOptions.addArguments("--remote-allow-origins=*")
         chromeOptions.addArguments("--start-maximized")
         chromeOptions.addArguments("--disable-gpu")
         chromeOptions.setBinary("D:\\chrome\\chrome-win64\\chrome.exe")
         ChromeDriver chromeDriver = new ChromeDriver(chromeOptions)
+
+
+
         return chromeDriver
     }
 
 //
     @Bean
 //    配置目录
-    public String libreofficeConfigPath (){
+    String libreofficeConfigPath (){
 //        检查libreoffice 是否在指定目录
         OsInfo osInfo = new OsInfo()
+        String libreOfficeLinuxPath ="~/.config/libreoffice/4/user"
+        String libreOfficeWindowsPath = "C:\\Program Files\\LibreOffice\\program\\soffice.exe"
         if (osInfo.isLinux()){
             if (!FileUtil.exist(libreOfficeLinuxPath)){
-                println("文件不存在，请在application.yml中配置linux中的路径")
+                println("文件不存在，请在Bean中配置linux中的路径")
                 return ""
             }else {
+                println("当前linux配置为:"+libreOfficeLinuxPath)
                 return libreOfficeLinuxPath
             }
         }else if (osInfo.isWindows()){
             if (!FileUtil.exist(libreOfficeWindowsPath)){
-                println("文件不存在，请在application.yml中配置windows中的路径")
+                println("文件不存在，请在Bean中配置windows中的路径")
                 return ""
             }else {
+                println("当前Windows配置为:"+libreOfficeWindowsPath)
                 return libreOfficeWindowsPath
             }
+        }else {
+            return ""
         }
     }
 
-
-
+    @Bean
+    String imagemagickConfigPath (){
+        OsInfo osInfo = new OsInfo()
+        String imagemagickLinuxPath =""
+        String imagemagickWindowsPath = "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"
+        if (osInfo.isLinux()){
+            if (!FileUtil.exist(imagemagickLinuxPath)){
+                println("文件不存在，请在Bean中配置linux中的路径")
+                return ""
+            }else {
+                println("当前linux配置为:"+imagemagickLinuxPath)
+                return imagemagickLinuxPath
+            }
+        }else if (osInfo.isWindows()){
+            if (!FileUtil.exist(imagemagickWindowsPath)){
+                println("文件不存在，请在Bean中配置windows中的路径")
+                return ""
+            }else {
+                println("当前Windows配置为:"+imagemagickWindowsPath)
+                return imagemagickWindowsPath
+            }
+        }else {
+            return ""
+        }
+    }
 
     static void main(String[] args) {
         GrailsApp.run(Application, args)

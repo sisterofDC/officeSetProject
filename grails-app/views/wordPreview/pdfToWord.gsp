@@ -6,6 +6,7 @@
 --%>
 
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%def r=request.contextPath%>
 <html>
 <head>
     <title></title>
@@ -24,21 +25,14 @@
     })
 
     function buttonRender(){
-        let beginGenerate = $("#beginGenerate")
 
-        beginGenerate.click(function () {
-            $.ajax({
-                url: "${r}/WordPreview/pdfToWord",
-                type: "POST",
-                success: function(response) {
-                    console.log(response)
-                },
-                error: function(error) {
-                    console.error('Error:', error);
-                }
-            });
-        })
     }
+
+    function renderUpload(){
+
+    }
+
+
 </script>
 
 

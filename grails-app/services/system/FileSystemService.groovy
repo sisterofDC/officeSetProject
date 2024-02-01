@@ -238,5 +238,8 @@ class FileSystemService {
         }
     }
 
-
+    String getDirectoryByFileBucket(String fileBucket){
+        File directory = new File(systemSavePathConfig+File.separator+fileBucket)
+        return directory.getPath()
+    }
 }

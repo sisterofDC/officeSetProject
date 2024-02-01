@@ -83,8 +83,8 @@ grails:
             maxsize: 1000
     controllers:
         upload:
-            maxFileSize: 2000000
-            maxRequestSize: 2000000
+            maxFileSize: 104857600
+            maxRequestSize: 104857600
         defaultScope: singleton
     converters:
         encoding: UTF-8
@@ -143,10 +143,5 @@ server:
     context-path: "/"
     port: 80   #这里内嵌tomcat端口号
 
-
-# windows  上的 LibreOffice 路径 需要自己配置
-LibreOfficeWindowsPathSet: "C:\\Program Files\\LibreOffice\\program\\soffice.exe"
-# linux 上的 LibreOffice 路径 需要自己配置
-LibreOfficeLinuxPathSet: "~/.config/libreoffice/4/user"
 
 

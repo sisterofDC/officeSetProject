@@ -45,6 +45,15 @@ class ServeRenderingService {
         FileUtils.copyFile(srcFile,new File("D:\\GenerateFile\\002.png"))
     }
 
+
+    def getMessageFromInternet(){
+        chromeDriverConfig.get("https://mp.weixin.qq.com/s/iplqKrIyJHAI-A779mO2qQ")
+        Thread.sleep(2000);
+
+
+
+    }
+
     /**
      * 将LibreOffice的配置中的转换的文件，转成单页的PDF，这里用的print的功能
      * @param serverUrl 已近转化为html文件的地址，对接的是
