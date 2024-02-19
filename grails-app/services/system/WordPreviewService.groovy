@@ -6,6 +6,9 @@ import grails.gorm.transactions.Transactional
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import org.apache.poi.xwpf.usermodel.XWPFParagraph
 
+/*
+这个方法是不可取的，这里没有必要将PDF 转为word 因为这个转出来没有格式要求
+ */
 @Transactional
 class WordPreviewService {
 

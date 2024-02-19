@@ -16,6 +16,8 @@ class FileInfo {
      String fileSizeInfo
     /** * 存储到bucket的名称（文件唯一标识id）*/
      String fileObjectName
+    /** * 文件ID*/
+     String fileId
     /** * 存储路径 */
      String filePath
 
@@ -39,6 +41,7 @@ class FileInfo {
         fileSizeKb(nullable: false)
         fileSizeInfo(nullable:false,blank: false)
         fileObjectName(nullable:false,blank: false)
+        fileId(nullable: false,blank: false)
         filePath(nullable:false,blank: false)
         createUser(nullable: true,blank: true)
         lastUpdatedBy(nullable: true,blank: true)

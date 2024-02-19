@@ -6,6 +6,10 @@ import cn.hutool.core.io.watch.watchers.DelayWatcher
 import cn.hutool.core.util.RuntimeUtil
 import cn.hutool.core.util.StrUtil
 import grails.gorm.transactions.Transactional
+import org.apache.commons.io.monitor.FileAlterationListener
+import org.apache.commons.io.monitor.FileAlterationMonitor
+import org.apache.commons.io.monitor.FileAlterationObserver
+import org.grails.plugin.cache.GrailsCacheManager
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.nio.file.Path
@@ -71,10 +75,21 @@ class LibreOfficeInterfaceService {
 
     }
 
-
-    void excelToHtml(){
+//    excel 转 html
+    /**
+     * 转html
+     * @param inputFile
+     * @param outputDirectory
+     * @param changeFileNamePath
+     */
+    void excelToHtml(String inputFile,  String outputDirectory){
 //  --convert-to "html:XHTML Writer File:UTF8" --outdir "D:\saveFile" "D:\testConvertFile\test.excel"
-
+        String commandLine = libreofficeConfigPath + " --headless --invisible --convert-to \"html:XHTML Calc File:UTF8\" --outdir " + "\"${outputDirectory}\"" +" \"${inputFile}\""
+//        打印转化的命令语句
+        println(commandLine)
+        String str = RuntimeUtil.execForStr(commandLine)
+//        这里看有无有自己关闭
+        println(str)
     }
 
     /**
@@ -95,8 +110,75 @@ class LibreOfficeInterfaceService {
     这里只用于 word 转 pdf 不用这个。
      */
 
-    void pdfToPng(){
 
+//    实现文件监控的控件，这里就不用hutool的包，因为hutool的文件监控我不知道怎么用
+    public static class MyFileMonitor implements FileAlterationListener{
+//        这里需要把这个塞进去
+        GrailsCacheManager grailsCacheManager
+
+        public MyFileMonitor(GrailsCacheManager grailsCacheManager){
+            this.grailsCacheManager=grailsCacheManager
+        }
+
+        @Override
+        void onDirectoryChange(File directory) {
+//            文件目录
+            println("文件目录改变")
+        }
+
+        @Override
+        void onDirectoryCreate(File directory) {
+//            文件目录
+            println("文件目录创建")
+        }
+
+        @Override
+        void onDirectoryDelete(File directory) {
+//            文件目录
+            println("文件目录删除")
+        }
+
+        @Override
+        void onFileChange(File file) {
+//            文件改变
+            println("文件改变")
+            println(file.name)
+            println("文件大小"+file.size())
+            println("文件修改事件"+file.lastModified())
+            if (file.size()>0L){
+                def myCache = grailsCacheManager.getCache('myCache')
+                myCache.put("isFinished",2)
+            }
+        }
+
+        @Override
+        void onFileCreate(File file) {
+//            文件创建
+            println("文件创建")
+            println(file.name)
+        }
+
+        @Override
+        void onFileDelete(File file) {
+//            文件删除
+            println("文件删除")
+            println(file.name)
+            def myCache = grailsCacheManager.getCache('myCache')
+            myCache.put("isFinished",2)
+        }
+
+        @Override
+        void onStart(FileAlterationObserver observer) {
+//            监控状态
+            println("监控状态启动")
+        }
+
+        @Override
+        void onStop(FileAlterationObserver observer) {
+//            监控状态
+            println("监控状态结束")
+        }
     }
+
 
 }

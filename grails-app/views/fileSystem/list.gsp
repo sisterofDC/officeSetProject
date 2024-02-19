@@ -183,6 +183,7 @@
                 {title: '文件大小信息',field: "fileSizeInfo", },
                 {title: '文件存储名',field: "fileObjectName", },
                 {title: '文件位置',field: "filePath", },
+                {title: '文件ID',field: "fileId",},
                 {title: '创建日期',field: "dateCreated", templet:"<div>{{layui.util.toDateString(d.dateCreated, 'yyyy-MM-dd')}}</div>",},
                 {title: '操作栏', toolbar: '#tableBar', align: 'center', width: 200, fixed: 'right'}, //最右边操作栏
             ]]

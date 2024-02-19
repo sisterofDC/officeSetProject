@@ -35,7 +35,8 @@ class FileSystemService {
 //        原始名字
         String originalFilename = file.getOriginalFilename()
 //        文件名  直接生成一个雪花ID就行了，因为grails用的id 自增
-        String saveName= IdUtil.getSnowflakeNextIdStr()
+        String fileId= IdUtil.getSnowflakeNextIdStr()
+        String saveName = fileId
 //        获取文件后缀
         String fileSuffix = ""
 //        得到后缀名
@@ -46,7 +47,6 @@ class FileSystemService {
             String[] fileNameSplit = originalFilename.split("\\.")
             if (fileNameSplit.length!=0){
                 fileSuffix=fileNameSplit[fileNameSplit.length-1]
-//                最终保存的名字
                 saveName=saveName+"."+fileSuffix
             }else {
                 fileSuffix = ""
@@ -78,6 +78,7 @@ class FileSystemService {
         fileInfo.fileSuffix = fileSuffix
         fileInfo.fileSizeKb = size
         fileInfo.fileSizeInfo = fileSizeInfo
+        fileInfo.fileId = fileId
         fileInfo.fileObjectName = saveName
         fileInfo.filePath = savePath+File.separator+saveName
 //        如果需要创建这个，需要整合安全系统里面
@@ -86,7 +87,7 @@ class FileSystemService {
         file.transferTo(new File(fileInfo.filePath))
 //        将数据保存后，保存到数据库中，并返回保存的saveName
         if(fileInfo.save(failOnError: true)){
-            return fileInfo.fileObjectName
+            return fileInfo.fileId
         }else {
             return "-1"
         }
