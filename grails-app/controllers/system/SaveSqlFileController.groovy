@@ -33,6 +33,7 @@ class SaveSqlFileController {
                         "data":"done",
                         "text":"文件生成成功",
                 ]
+                futureMap.remove("taskId")
                 render(successResponseData as JSON)
             }else {
                 def successResponseData = [

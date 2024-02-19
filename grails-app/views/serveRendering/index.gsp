@@ -26,7 +26,7 @@
                     <button type="button" class="layui-btn layui-btn-primary" lay-event="beginUpload" id="beginUpload"><i class="layui-icon">&#xe681;</i>开始上传</button>
                     <button type="button" class="layui-btn layui-btn-primary" lay-event="beginConvert" id="beginConvert"><i class="layui-icon">&#xe655;</i>开始转换</button>
                 </div>
-                <table id="dataFileTable" lay-filter="dataFileTable"></table>
+                <table id="dataTable" lay-filter="dataTable"></table>
             </div>
         </div>
     </div>
@@ -80,13 +80,16 @@
         cloudStoreFileID
         /** 上传结果*/
         uploadStatus
+        /** 转换文件ID */
+        convertFileID
 
-        constructor(index, name, size, cloudStoreFileID, uploadStatus) {
+        constructor(index, name, size, cloudStoreFileID, uploadStatus,convertFileID) {
             this.index = index;
             this.name = name;
             this.size = size;
             this.cloudStoreFileID = cloudStoreFileID;
             this.uploadStatus = uploadStatus;
+            this.convertFileID = convertFileID
         }
     }
 
@@ -123,7 +126,7 @@
                 // 解析数据
                 parseFilesData()
                 // 渲染表格
-                renderTable()
+                renderTable( [...renderTableDataMap.values()])
                 // obj.upload(index, file); // 对上传失败的单个文件重新上传，一般在某个事件中使用
                 // delete files[index]; //删除列表中对应的文件，一般在某个事件中使用
                 // obj.resetFile(index, file, '123.jpg'); // 重命名文件名
@@ -134,7 +137,7 @@
                 // 这里是上传成功后的回调
                 if (response.code===200){
                     resetFile(index,response.data)
-                    renderTable()
+                    renderTable( [...renderTableDataMap.values()])
                 }else {
                     layer.msg('数据上传失败!',function() {time:2000})
                 }
@@ -158,27 +161,29 @@
             console.log(value); // File object
             if (renderTableDataMap.has(index)===false){
                 let uploadFileSet = new UploadFileSet(
-                    index,value.name, convertToKB(value.size),"","待上传"
+                    index,value.name, convertToKB(value.size),"","待上传",""
                 )
                 renderTableDataMap.set(index,uploadFileSet)
             }
         })
     }
 
-    function renderTable() {
+    function renderTable(data) {
         // 将选择的渲染进去
-        let data = [...renderTableDataMap.values()]
         fileTable = table.render({
-            elem: '#dataFileTable',
+            elem: '#dataTable',
+            id:"convertTable",
             toolbar: '#myToolbar', //头部工具栏部分
             cellMinWidth: 100,
             cols: [
                 [
-                    {type:  'numbers', title: '序号', width: 70, fixed: 'left' }, //序号列
+                    {type: 'checkbox'}, //多选框
+                    {type:  'numbers', title: '序号', width: 70, }, //序号列
                     {field: 'index', title: '文件号', sort: true},
                     {field: 'name', title: '文件名', sort: true},
                     {field: 'size',title: '大小' ,sort: true},
                     {field: 'cloudStoreFileID',title: "服务器文件ID"},
+                    {field: 'convertFileID',title: "转换后文件ID"},
                     {field: 'uploadStatus',title: '上传状态',templet: function (d) {  return showUploadStatus(d.uploadStatus); }},
                     {title: '操作', toolbar: '#tableBar', fixed: 'right', align: 'center',minWidth: 100}
                 ]
@@ -192,6 +197,26 @@
 
             },
         });
+
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === "zipDownload"){ //批量下载
+                let checkRows = table.checkStatus('convertTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要操作的数据', {icon: 2});
+                    return;
+                }
+                let objID=checkRows.data.map(function(item) {
+                    return item.convertFileID;
+                }).join(",");
+                let index =layer.confirm('请确定要下载的转换文件', {
+                    skin: 'layui-layer-admin',
+                    shade: .1
+                }, function () {
+                    zipDownloadSet(objID)
+                    layer.close(index)
+                });
+            }
+        });
     }
 
     function showUploadStatus(data) {
@@ -201,7 +226,9 @@
             return '<span style="background-color: blue;color: white;font-size: larger">'+data+'</span>'
         }else  if (data==='上传失败')  {
             return '<span style="background-color: red;color: white;font-size: larger">'+data+'</span>'
-        }else {
+        }else if(data==='转换成功'){
+            return '<span style="background-color: yellowgreen;color: white;font-size: larger">'+data+'</span>'
+        }else{
             return '<span style="background-color: red;color: white;font-size: larger">'+'未知状态'+'</span>'
         }
     }
@@ -221,6 +248,8 @@
         }
     }
 
+
+
     function renderButton() {
         let beginConvert = $("#beginConvert")
         beginConvert.click(function () {
@@ -230,30 +259,105 @@
 
 
     function convertRequestFunction() {
-        let valuesArray = [...renderTableDataMap.values()];
+        let allData = table.cache['convertTable'];
         // 这里先不做成全部的
         // $.each(valuesArray,function (index,value) {
         //
         // })
-        let value =valuesArray[0]
-        if(value.uploadStatus==="上传成功"){
-            let fileId = value.cloudStoreFileID
-            let postData = {
-                fileId: fileId
-            };
-            $.ajax({
-                url: '${r}/ServeRendering/beginConvert',
-                type: 'POST',
-                data: postData,
-                success: function(response) {
-                    console.log(response);
-                },
-                error: function(xhr, status, error) {
-                    console.error('POST request failed');
-                }
-            });
-        }
+        $.each(allData,function (index,value) {
+            if(value.uploadStatus==="上传成功"){
+                let fileId = value.cloudStoreFileID
+                let postData = {
+                    fileId: fileId
+                };
+                $.ajax({
+                    url: '${r}/ServeRendering/beginConvert',
+                    type: 'POST',
+                    data: postData,
+                    success: function(response) {
+                        console.log(response);
+                        /**
+                         * 这里给出10秒中的轮询
+                         */
+                        if (response.code===200){
+                            let taskId = response.data
+                            sendRequest(taskId, 0,value,index); // Start the recursive function with count = 0
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('POST request failed');
+                    }
+                });
+            }
+        })
+    }
 
+
+    function sendRequest(taskId, count,value,index) {
+        $.ajax({
+            url: '${r}/ServeRendering/taskIsOver',
+            type: 'POST',
+            data: {
+                taskId: taskId
+            },
+            success: function(response) {
+                // Handle successful response here
+                console.log(response);
+                if (response.code === 200) {
+                    if (response.data === "finished") {
+                        // Do something if the task is finished
+                        console.log("Task is finished.");
+                        value.convertFileID= response.file
+                        value.uploadStatus="转换成功"
+                        table.updateRow('convertTable', {
+                            index: index,
+                            data: value
+                        });
+                    } else if (response.data === "unfinished" && count < 30) {
+                        // Call sendRequest recursively if the task is unfinished and count < 10
+                        //
+                        console.log("任务没有完成");
+                        setTimeout(function() {
+                            sendRequest(taskId, count + 1,value,index);
+                        }, 1000); // 1000 milliseconds = 1 second
+                    }
+                } else {
+                    // Handle other response codes
+                    console.error("Error:", response);
+                }
+            },
+            error: function(xhr, status, error) {
+                // Handle errors here
+                console.error(xhr.responseText);
+            }
+        });
+    }
+
+
+    function zipDownloadSet(data) {
+        $.ajax({
+            url: '${r}/ServeRendering/zipDownload',
+            method: "POST",
+            data: {
+                "convertIds":data,
+            },
+            xhrFields: {
+                responseType: 'blob' // Set the responseType to 'blob' here
+            },
+            success: function(data, status, xhr) {
+                let blob = new Blob([data], { type: 'application/octet-stream;charset=UTF-8' });
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = url;
+                a.download = "打包文件.zip"
+                a.click();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                layer.alert("服务器出现问题");
+                console.error("Error:",xhr, status, error);
+            }
+        });
     }
 
 </script>

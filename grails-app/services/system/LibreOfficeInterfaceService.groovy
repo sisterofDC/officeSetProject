@@ -77,19 +77,31 @@ class LibreOfficeInterfaceService {
 
 //    excel 转 html
     /**
-     * 转html
+     * 利用libreoffice的命令行进行转换指令，详情需要查看 https://help.libreoffice.org/latest/zh-TW/text/shared/guide/convertfilters.html?&DbPAR=SHARED&System=WIN
+     * 这里需要把参数弄对，是用calc 的组件进行转换，字符是utf-8 要不全是乱码
      * @param inputFile
      * @param outputDirectory
-     * @param changeFileNamePath
      */
-    void excelToHtml(String inputFile,  String outputDirectory){
+    public String excelToHtml(String inputFile,  String outputDirectory){
+//  --convert-to "html:XHTML Writer File:UTF8" --outdir "D:\saveFile" "D:\testConvertFile\test.excel"
+//        String commandLine = libreofficeConfigPath + " --headless --invisible --convert-to \"html:XHTML Calc File:UTF8\" --outdir " + "\"${outputDirectory}\"" +" \"${inputFile}\""
+        String commandLine = libreofficeConfigPath + " --headless --invisible --convert-to html --outdir " + "\"${outputDirectory}\"" +" \"${inputFile}\""
+//        打印转化的命令语句
+        println(commandLine)
+        String echoStr = RuntimeUtil.execForStr(commandLine)
+//        回显的命令数据
+        println(echoStr)
+        return echoStr
+    }
+
+    public String excelToHtmlVersionTwo(String inputFile,  String outputDirectory){
 //  --convert-to "html:XHTML Writer File:UTF8" --outdir "D:\saveFile" "D:\testConvertFile\test.excel"
         String commandLine = libreofficeConfigPath + " --headless --invisible --convert-to \"html:XHTML Calc File:UTF8\" --outdir " + "\"${outputDirectory}\"" +" \"${inputFile}\""
 //        打印转化的命令语句
         println(commandLine)
-        String str = RuntimeUtil.execForStr(commandLine)
-//        这里看有无有自己关闭
-        println(str)
+        String echoStr = RuntimeUtil.execForStr(commandLine)
+//        回显的命令数据
+        return echoStr
     }
 
     /**
@@ -111,13 +123,15 @@ class LibreOfficeInterfaceService {
      */
 
 
-//    实现文件监控的控件，这里就不用hutool的包，因为hutool的文件监控我不知道怎么用
+//    实现文件监控的控件，需要实现所有的listener。代码有点多，只需要实现需要的组件就行了
     public static class MyFileMonitor implements FileAlterationListener{
-//        这里需要把这个塞进去
+//        这里需要把内存管理这个这个塞进去
         GrailsCacheManager grailsCacheManager
+        String cacheName
 
-        public MyFileMonitor(GrailsCacheManager grailsCacheManager){
+        public MyFileMonitor(GrailsCacheManager grailsCacheManager,String cacheName){
             this.grailsCacheManager=grailsCacheManager
+            this.cacheName=cacheName
         }
 
         @Override
@@ -145,8 +159,9 @@ class LibreOfficeInterfaceService {
             println(file.name)
             println("文件大小"+file.size())
             println("文件修改事件"+file.lastModified())
+//            这里是状态改成2，就是生成的文件改变大小后，就是转换完成
             if (file.size()>0L){
-                def myCache = grailsCacheManager.getCache('myCache')
+                def myCache = grailsCacheManager.getCache(cacheName)
                 myCache.put("isFinished",2)
             }
         }
@@ -161,22 +176,23 @@ class LibreOfficeInterfaceService {
         @Override
         void onFileDelete(File file) {
 //            文件删除
-            println("文件删除")
-            println(file.name)
-            def myCache = grailsCacheManager.getCache('myCache')
-            myCache.put("isFinished",2)
+//            println("文件删除")
+//            println(file.name)
+////            这里也可以改成2 ，当临时文件删除的时候，就是转换完成了
+//            def myCache = grailsCacheManager.getCache('myCache')
+//            myCache.put("isFinished",2)
         }
 
         @Override
         void onStart(FileAlterationObserver observer) {
 //            监控状态
-            println("监控状态启动")
+//            println("监控状态启动")
         }
 
         @Override
         void onStop(FileAlterationObserver observer) {
 //            监控状态
-            println("监控状态结束")
+//            println("监控状态结束")
         }
     }
 
