@@ -29,6 +29,8 @@ class ServeRenderingService {
 //        这个配置 driver 需要和 对应的 chrome 对齐 然后jar包驱动是
         System.setProperty("webdriver.chrome.driver","D:\\chrome\\chromedriver-win64\\chromedriver.exe")
         ChromeOptions chromeOptions = new ChromeOptions()
+//        无头设置
+//        chromeOptions.addArguments("--headless")
         chromeOptions.addArguments("--allow-running-insecure-content")
         chromeOptions.addArguments("--remote-allow-origins=*")
         chromeOptions.addArguments("--start-maximized")

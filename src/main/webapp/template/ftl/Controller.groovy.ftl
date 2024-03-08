@@ -124,35 +124,4 @@ class ${domainName}Controller {
       }
    }
 
-   def sessionFactory
-
-   def batchUpload() {
-      if (request.method == "POST") {
-         def indexSet = params.getLong("indexSet")
-         def ${domainVariableName} = new ${domainName}(params)
-// -------------添加更多的参数验证-------------
-// 更新和创建新的实例的时候做好参数验证
-
-
-// -------------添加更多的参数验证-------------
-
-         if (!${domainVariableName}.hasErrors() && ${domainVariableName}.validate()) {
-//             将上传的ID 传递回去
-            if (${domainVariableName}.save(failOnError: true)) {
-               def result = [code: 200, text:"成功上传",data:indexSet]
-               render result as JSON
-            } else {
-               def result = [code: 500, text: "失败",data:indexSet,errorMessage:"保存失败，服务器原因"]
-               render result as JSON
-            }
-         } else {
-            println ${domainVariableName}.errors
-            def result = [code: 500, text: "失败",data:indexSet,errorMessage:"保存失败，请校验参数，错误信息为："+ ${domainVariableName}.errors.toString().replaceAll(/["'\n]/, '')]
-            render result as JSON
-         }
-      } else {
-         render(view: "batchUpload")
-      }
-   }
-
 }

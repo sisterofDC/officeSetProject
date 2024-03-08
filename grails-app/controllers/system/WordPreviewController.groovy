@@ -11,7 +11,7 @@ class WordPreviewController {
     LibreOfficeInterfaceService libreOfficeInterfaceService
     def pdfToWord(){
         if (request.method=="POST"){
-            wordPreviewService.convertToWord()
+
         }else {
           render(view: "pdfToWord")
         }
@@ -37,14 +37,17 @@ class WordPreviewController {
             def result = [code: 500, text: "失败"]
             render(result as JSON)
         }else {
-            String fileObjectName = fileSystemService.uploadFile(file,"onlinePreview")
-            if (fileObjectName!="-1"){
+            String fileId = fileSystemService.uploadFile(file,"onlinePreview")
+            if (fileId!="-1"){
 //                拿到fileInfo
-                FileInfo fileInfo = FileInfo.findByFileObjectName(fileObjectName)
-                String changeFileNamePath = fileInfo.filePath
-                changeFileNamePath = StrUtil.removeSuffix(changeFileNamePath,"."+fileInfo.fileSuffix)
-                changeFileNamePath = changeFileNamePath+"."+"pdf"
-                libreOfficeInterfaceService.wordToPDF(fileInfo.filePath,fileSystemService.getDirectoryByFileBucket(fileInfo.fileBucket),changeFileNamePath)
+                FileInfo fileInfo = FileInfo.findByFileId(fileId)
+//                不加参数的
+//                libreOfficeInterfaceService.wordToPDF(fileInfo.filePath,fileSystemService.getDirectoryByFileBucket(fileInfo.fileBucket))
+                Map<String,String> parametersMap = new HashMap<String,String>()
+//                更多的参数需要阅读官方文档
+                parametersMap.put("Quality","{\"type\":\"long\",\"value\":\"100\"}")
+                parametersMap.put("IsSkipEmptyPages","{\"type\":\"boolean\",\"value\":\"true\"}")
+                libreOfficeInterfaceService.wordToPDFWithParameter(fileInfo.filePath,fileSystemService.getDirectoryByFileBucket(fileInfo.fileBucket),parametersMap)
                 def result = [code: 200, text: "文件转换成功"]
                 render(result as JSON)
             }else {

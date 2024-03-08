@@ -41,39 +41,51 @@ class LibreOfficeInterfaceService {
     3、PDF 转 PNG，JPG
      */
 
-    void wordToPDF(String inputFile, String outputDirectory, String changeFileNamePath){
-//        println(inputFile)
-//        println(outputDirectory)
-//        println(changeFileNamePath)
-        String commandLine = libreofficeConfigPath +  " --headless --convert-to pdf:draw_pdf_Export --outdir " + "\"${outputDirectory}\"" +" \"${inputFile}\""
+
+    /**
+     * 这个是word转PDF 源参数列表在这里https://help.libreoffice.org/latest/zh-TW/text/shared/guide/pdf_params.html?&DbPAR=SHARED&System=WIN
+     * @param inputFile
+     * @param outputDirectory
+     * @return
+     */
+    public String wordToPDF(String inputFile, String outputDirectory){
+//        普通的直接写PDF 全部用默认的就行了
+        String commandLine = libreofficeConfigPath +  " --headless --convert-to pdf --outdir " + "\"${outputDirectory}\"" +" \"${inputFile}\""
 //        .\soffice.exe --headless --convert-to pdf:writer_pdf_Export --outdir "D:\saveFile" "D:\testConvertFile\test.doc"
         println(commandLine)
-        println(changeFileNamePath)
-        //        开启监控后，在进行转换
-        SimpleWatcher simpleWatcher = new SimpleWatcher(){
-            @Override
-            void onCreate(WatchEvent<?> event, Path currentPath) {
-                println("文件被创建"+currentPath.toString())
-//                当文件创建后，等待
-            }
-
-            @Override
-            void onModify(WatchEvent<?> event, Path currentPath) {
-                println("文件被修改"+currentPath.toString())
-//                这里不知道会不会修改的时候不能导入
-                Thread.sleep(1000)
-                imagemagickPDFToPNG(changeFileNamePath)
-            }
-        }
-
-        WatchMonitor monitor = WatchMonitor.createAll(new File(changeFileNamePath),simpleWatcher)
-        monitor.start()
-
         String str = RuntimeUtil.execForStr(commandLine)
 //        这里看有无有自己关闭
         println(str)
-
+        return str
     }
+
+
+
+    /**
+     *  带参数的转出，需要配置  https://help.libreoffice.org/latest/zh-TW/text/shared/guide/pdf_params.html?&DbPAR=SHARED&System=WIN
+     *  这里先尝试用用一些参数来保证导出来的效果好一点
+     * 标准的格式 soffice --convert-to pdf:draw_pdf_Export:{"TiledWatermark":{"type":"string","value":"draft"}} test.odg
+     * 还是有问题，文档出现大面积的错位问题，格式是保留了。但是还是有问题
+     * @param inputFile
+     * @param outputDirectory
+     * @param parameters
+     * @return
+     */
+    public String wordToPDFWithParameter(String inputFile, String outputDirectory,Map<String,String> parameters){
+        if (parameters != null && parameters.size() > 0) {
+            def formattedString = parameters.collect { key, value ->
+                "\"$key\":$value"
+            }.join(",")
+            def result = "pdf:draw_pdf_Export:{$formattedString}"
+            String commandLine = libreofficeConfigPath +  " --headless --convert-to "+ result+ " --outdir " + "\"${outputDirectory}\"" +" \"${inputFile}\""
+            println(commandLine)
+            String str = RuntimeUtil.execForStr(commandLine)
+            println(str)
+        } else {
+            println "Map is null or empty."
+        }
+    }
+
 
 //    excel 转 html
     /**
