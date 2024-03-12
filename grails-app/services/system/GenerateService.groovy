@@ -46,18 +46,32 @@ class GenerateService {
             }else {
                 ftlInputData.put("domainNameChinese",domainNameChinese)
                 ftlInputData.put("domainVariableName",domainVariableName)
+//                默认创建一个display 的一个列子
+                ftlInputData.put("classPropertyNameWithBoolean","display")
+                ftlInputData.put("trueTypeValue","'1'")
+                ftlInputData.put("falseTypeValue","'0'")
+
+
                 List<LinkedHashMap<String,String>> classPropertiesInput = new ArrayList<>()
                 List<LinkedHashMap<String,String>> classPropertiesTable = new ArrayList<>()
                 List<LinkedHashMap<String,String>> classPropertiesDate = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesSpecial = new ArrayList<>()
                 generateList.each {generate ->
                     if (generate.status=="启用"){
-                        def propertyInput = [
-                                "classPropertyChinese":generate.classPropertyChinese,
-                                "classPropertyName":generate.classProperty,
-                        ]
-                        classPropertiesInput.add(propertyInput)
 
-                        if (generate.query=="dateInput"){
+                        if (generate.propertyType=="java.lang.Integer"){
+                            addNumberClassPropertiesInput(classPropertiesInput,generate)
+                        }else if (generate.propertyType=="java.lang.String"){
+                            addDefaultPropertiesInput(classPropertiesInput,generate)
+                        }else if (generate.propertyType=="java.lang.Double"){
+                            addNumberClassPropertiesInput(classPropertiesInput,generate)
+                        }else if (generate.propertyType=="java.math.BigDecimal"){
+                            addNumberClassPropertiesInput(classPropertiesInput,generate)
+                        }else {
+                            addDefaultPropertiesInput(classPropertiesInput,generate)
+                        }
+
+                        if (generate.query=="dateInputWithDay"){
                             def propertyTable = [
                                     "classPropertyChinese":generate.classPropertyChinese,
                                     "classPropertyName":generate.classProperty,
@@ -65,10 +79,24 @@ class GenerateService {
                             ]
                             def propertyDate =[
                                     "classPropertyName":generate.classProperty,
+                                    "dateType":"date",
                             ]
                             classPropertiesTable.add(propertyTable)
                             classPropertiesDate.add(propertyDate)
-                        }else if (generate.query=="input"){
+                        }else if(generate.query=="dateInputWithSecond"){
+//                            加一点长度
+                            def propertyTable = [
+                                    "classPropertyChinese":generate.classPropertyChinese,
+                                    "classPropertyName":generate.classProperty,
+                                    "templet":"templet:\"<div>{{layui.util.toDateString(d." +generate.classProperty + ", 'yyyy-MM-dd HH:mm:ss')}}</div>\", width: 200,",
+                            ]
+                            def propertyDate =[
+                                    "classPropertyName":generate.classProperty,
+                                    "dateType":"datetime",
+                            ]
+                            classPropertiesTable.add(propertyTable)
+                            classPropertiesDate.add(propertyDate)
+                        } else if (generate.query=="input"){
                             def propertyTable = [
                                     "classPropertyChinese":generate.classPropertyChinese,
                                     "classPropertyName":generate.classProperty,
@@ -81,6 +109,7 @@ class GenerateService {
                 ftlInputData.put("classPropertiesInput",classPropertiesInput)
                 ftlInputData.put("classPropertiesTable",classPropertiesTable)
                 ftlInputData.put("classPropertiesDate",classPropertiesDate)
+                ftlInputData.put("classPropertiesSpecial",classPropertiesSpecial)
                 def fileName ="list.gsp"
                 return [
                         "templateFile":"list.ftl",
@@ -90,6 +119,26 @@ class GenerateService {
             }
         }
     }
+
+
+    void addNumberClassPropertiesInput(List<LinkedHashMap<String,String>> classPropertiesInput,Generate generate ){
+        def propertyInput = [
+                "classPropertyChinese":generate.classPropertyChinese,
+                "classPropertyName":generate.classProperty,
+                "type":"type='number'"
+        ]
+        classPropertiesInput.add(propertyInput)
+    }
+
+    void addDefaultPropertiesInput(List<LinkedHashMap<String,String>> classPropertiesInput,Generate generate ){
+        def propertyInput = [
+                "classPropertyChinese":generate.classPropertyChinese,
+                "classPropertyName":generate.classProperty,
+                "type":""
+        ]
+        classPropertiesInput.add(propertyInput)
+    }
+
 
     def generateEditGSPFile(String domainName){
         def generateList = Generate.findAllByDomainName(domainName)
@@ -105,6 +154,7 @@ class GenerateService {
                 ftlInputData.put("domainVariableName",domainVariableName)
                 List<LinkedHashMap<String,String>> classPropertiesInput = new ArrayList<>()
                 List<LinkedHashMap<String,String>> classPropertiesDate = new ArrayList<>()
+                List<LinkedHashMap<String,String>> classPropertiesSpecial  = new ArrayList<>()
                 generateList.each {generate ->
                     if (generate.status=="启用"){
                         if (generate.whetherRequired=="需要必填项"){
@@ -123,9 +173,16 @@ class GenerateService {
                             classPropertiesInput.add(propertyInput)
                         }
 
-                        if (generate.query=="dateInput"){
+                        if (generate.query=="dateInputWithDay"){
                             def propertyDate =[
                                     "classPropertyName":generate.classProperty,
+                                    "dateType":"date"
+                            ]
+                            classPropertiesDate.add(propertyDate)
+                        }else if (generate.query=="dateInputWithSecond"){
+                            def propertyDate =[
+                                    "classPropertyName":generate.classProperty,
+                                    "dateType":"datetime"
                             ]
                             classPropertiesDate.add(propertyDate)
                         }
@@ -133,6 +190,7 @@ class GenerateService {
                 }
                 ftlInputData.put("classPropertiesInput",classPropertiesInput)
                 ftlInputData.put("classPropertiesDate",classPropertiesDate)
+                ftlInputData.put("classPropertiesSpecial",classPropertiesSpecial)
                 def fileName ="edit.gsp"
                 return [
                         "templateFile":"edit.ftl",
@@ -158,10 +216,23 @@ class GenerateService {
                 ftlInputData.put("domainName",domainName)
                 ftlInputData.put("domainVariableName",domainVariableName)
                 ftlInputData.put("packageName",packageName)
+//                渲染查询语句的
                 List<LinkedHashMap<String,String>> classPropertiesQuery = new ArrayList<>()
+//                渲染前端返回用到的
+                List<LinkedHashMap<String,String>> classPropertiesReturnBack = new ArrayList<>()
+                generateList.each {generate ->
+                    def returnBack = [
+                            "propertyName":generate.classProperty,
+                            "domainVariableName":generate.domainVariableName,
+                    ]
+                    classPropertiesReturnBack.add(returnBack)
+                }
+
                 generateList.each {generate ->
                     if (generate.status=="启用"){
-                        if (generate.query=="dateInput"){
+//                        日期类型的选择
+//                        秒级
+                        if (generate.query=="dateInputWithSecond"){
                             def propertyQuery = [
                                     "classPropertyChinese":generate.classPropertyChinese,
                                     "classPropertyName":generate.classProperty,
@@ -172,7 +243,32 @@ class GenerateService {
                                             "               le('"+generate.classProperty+ "',endDate)",
                             ]
                             classPropertiesQuery.add(propertyQuery)
-                        }else if (generate.query=="input"){
+//                            天级
+                        } else if(generate.query=="dateInputWithDay"){
+                            def propertyQuery = [
+                                    "classPropertyChinese":generate.classPropertyChinese,
+                                    "classPropertyName":generate.classProperty,
+                                    "query":"def dateArray = params.get('" +generate.classProperty+ "').toString().split(' - ')\n" +
+                                            "               def startDate = Date.parse('yyyy-MM-dd', dateArray[0])\n" +
+                                            "               def endDate = Date.parse('yyyy-MM-dd',  dateArray[1])\n" +
+                                            "               ge('"+generate.classProperty+ "',startDate)\n" +
+                                            "               le('"+generate.classProperty+ "',endDate)",
+                            ]
+                            classPropertiesQuery.add(propertyQuery)
+                        } else if (generate.query=="input"){
+//                            这里先空着，后面来想办法，把所有的映射做完
+                            if (generate.propertyType=="boolean"){
+
+                            }else if (generate.propertyType=="java.lang.Integer"){
+
+                            }else if (generate.propertyType=="java.lang.String"){
+
+                            }else if (generate.propertyType=="java.lang.Double"){
+
+                            }else if (generate.propertyType=="java.math.BigDecimal"){
+
+                            }
+
                             if (generate.inquiryMode=="相等查询"){
                                 def propertyQuery = [
                                         "classPropertyChinese":generate.classPropertyChinese,
@@ -192,6 +288,7 @@ class GenerateService {
                     }
                 }
                 ftlInputData.put("classPropertiesQuery",classPropertiesQuery)
+                ftlInputData.put("classPropertiesReturnBack",classPropertiesReturnBack)
                 def fileName =domainName+"Controller.groovy"
                 return [
                         "templateFile":"Controller.groovy.ftl",
@@ -474,4 +571,6 @@ class GenerateService {
     def save(Generate generate){
         generate.save(failOnError: true)
     }
+
+
 }

@@ -22,9 +22,9 @@ class ${domainName}Controller {
          params.offset = page * limit
 <#--查询的类名 -->
          def criteria = ${domainName}.createCriteria()
-<#--更改查询语句-->
+//查询语句
          def results = criteria.list(max: params.limit, offset: params.offset) {
-<#--类名下面的参数查询-->
+//查询条件配置
 <#list classPropertiesQuery as property>
             // 查询${property.classPropertyChinese}
             if(params.${property.classPropertyName}){
@@ -106,6 +106,7 @@ class ${domainName}Controller {
       if (request.method == "POST") {
          def ids = params.ids?.trim()?.tokenize(',')
          if (ids) {
+// 提取每一个ID
             ids.each { id ->
                if (id && id =~ /^[0-9]*$/) {
                   def ${domainVariableName} = ${domainName}.get(id)
@@ -124,4 +125,24 @@ class ${domainName}Controller {
       }
    }
 
+// 前端返回数据，用于定制化返回数据，因为有时候不需要所有的数据都返回给前端，对不同的数据进行限制，或者有外键的时候需要返回数据
+   /*
+   def front() {
+      if (request.method == "POST"){
+         def ${domainVariableName} = ${domainName}.get(params.long("id"))
+         if (${domainVariableName}){
+            def data = [
+                id:${domainVariableName},
+            <#list classPropertiesReturnBack as property>
+                ${property.propertyName}:${property.domainVariableName}.${property.propertyName},
+            </#list>
+            ]
+            def result = [code:200,data:data]
+            render result as JSON
+         }
+      } else {
+         render(view: "front")
+      }
+   }
+   */
 }

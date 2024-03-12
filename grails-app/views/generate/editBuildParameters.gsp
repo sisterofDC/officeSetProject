@@ -211,11 +211,14 @@
                         title: 'input',
                         id: 100
                     },{
-                        title: 'dateInput',
+                        title: 'dateInputWithSecond',
                         id: 101
                     },{
-                        title: 'singleChoice',
+                        title: 'dateInputWithDay',
                         id: 102
+                    },{
+                        title: 'singleChoice',
+                        id: 103
                     }
                     ],
                     click: function(obj){

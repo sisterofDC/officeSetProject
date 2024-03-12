@@ -99,7 +99,7 @@ class ServeRenderingService {
      * @param fileName
      * @return
      */
-    private static String updateFileNameToPDF(String fileName) {
+    static String updateFileNameToPDF(String fileName) {
         def fileNameSplit = fileName.split('\\.')
         if (fileNameSplit.size() > 1) {
             // 如果有后缀, 变为 ".pdf"
@@ -111,7 +111,7 @@ class ServeRenderingService {
         }
     }
 
-    private static String updateFileNameToHTML(String fileName) {
+    static String updateFileNameToHTML(String fileName) {
         def fileNameSplit = fileName.split('\\.')
         if (fileNameSplit.size() > 1) {
             // 如果有后缀, 变为 ".html"

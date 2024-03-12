@@ -8,6 +8,7 @@ import java.util.concurrent.Future
 
 class ServeRenderingController {
     ServeRenderingService serveRenderingService
+    WordPreviewService wordPreviewService
     FileSystemService fileSystemService
     private final Map<String, Future<LinkedHashMap<String,String>>> futureMap = new ConcurrentHashMap<>()
 
@@ -102,5 +103,20 @@ class ServeRenderingController {
         }
     }
 
+
+    def jacobRender(){
+        def fileId = params.get("fileId").toString()
+        FileInfo fileInfo = FileInfo.findByFileId(fileId)
+        String source = fileInfo.getFilePath()
+        String target =  serveRenderingService.updateFileNameToPDF(fileInfo.getFilePath())
+        println(source)
+        println(target)
+        wordPreviewService.getPDFFile(source,target)
+        def successResponseData = [
+                "code":200,
+                "data":"开始转换",
+        ]
+        render(successResponseData as JSON)
+    }
 
 }

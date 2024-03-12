@@ -5,8 +5,9 @@ import grails.gorm.transactions.Transactional
 @Transactional
 class ConvertToPDFService {
 
-    public String libreOffice
-
+    /**
+     * 开始测试新的转化方法
+     */
     def startToConvert(){
 
     }

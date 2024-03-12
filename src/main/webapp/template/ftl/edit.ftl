@@ -12,7 +12,9 @@
     <asset:javascript src="jquery-3.5.1.min.js"/>
     <asset:stylesheet src="plugins/layui/css/layui.css" />
     <asset:javascript src="plugins/layui/layui.js"/>
+    <asset:javascript src="plugins/layui/xm-select.js"/>
     <style>
+        /** 如果需要更改左边文字的宽度在这里修改 */
         .layui-form-label{
             width: 100px;
         }
@@ -36,15 +38,22 @@
                     <!--表单填写部分-->
                     <form id="addOrUpdateForm" lay-filter="addOrUpdateForm" class="layui-form model-form">
                         <input name="id" id="id" type="hidden"/>
-                        <#list classPropertiesInput as property>
-                            <div class="layui-form-item">
-                                <label class="layui-form-label">${property.classPropertyChinese}：</label>
-                                <div class="layui-input-block"  >
-                                    <input name="${property.classPropertyName}" id="${property.classPropertyName}" class="layui-input" placeholder="请输入${property.classPropertyChinese}" autocomplete="off"  ${property.whetherRequired}/>
-                                </div>
+                    <#list classPropertiesInput as property>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">${property.classPropertyChinese}：</label>
+                            <div class="layui-input-block">
+                                <input name="${property.classPropertyName}" id="${property.classPropertyName}" class="layui-input" placeholder="请输入${property.classPropertyChinese}" autocomplete="off"  ${property.whetherRequired}/>
                             </div>
-                        </#list>
-
+                        </div>
+                    </#list>
+                    <#list classPropertiesSpecial as propertySpecial>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">${propertySpecial.classPropertyChinese}：</label>
+                            <div class="layui-input-block">
+                                ${propertySpecial.SpecialInput}
+                            </div>
+                        </div>
+                    </#list>
                         <div class="layui-form-item">
                             <div class="layui-input-block">
                                 <button class="layui-btn" lay-filter="formSubmitBtn" lay-submit id="formSubmitBtn">保存</button>
@@ -72,7 +81,7 @@
     let idInputSet
     //  方法初始化的地方
     $(document).ready(function() {
-        buttonRender()
+        renderButton()
         renderLaydate()
     })
 
@@ -91,7 +100,7 @@
         laydate.render({
             elem: "#${property.classPropertyName}",
             id: "${property.classPropertyName}layuiDate",
-            type: 'date',
+            type: '${property.dateType}',
         });
     </#list>
     }
@@ -178,7 +187,7 @@
     });
 
     //按钮部分的渲染
-    function buttonRender() {
+    function renderButton() {
         // 获取窗口索引
         let parentIndex = parent.layer.getFrameIndex(window.name);
         $("#closePage").click(function () {

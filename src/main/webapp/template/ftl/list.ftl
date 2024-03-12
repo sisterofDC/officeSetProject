@@ -18,7 +18,7 @@
     <asset:javascript src="jquery-3.5.1.min.js"/>
     <asset:stylesheet src="plugins/layui/css/layui.css" />
     <asset:javascript src="plugins/layui/layui.js"/>
-
+    <asset:javascript src="plugins/layui/xm-select.js"/>
 </head>
 </#noparse>
 
@@ -32,22 +32,28 @@
                 <div class="layui-card-body">
                     <form class="layui-form" id="searchForm" lay-filter="searchFormFilter">
                         <div class="layui-form-item">
-
-                            <#list classPropertiesInput as property>
-                                <div class="layui-inline">
-                                    <label class="layui-form-label">${property.classPropertyChinese}：</label>
-                                    <div class="layui-input-inline">
-                                        <input name="${property.classPropertyName}" id="${property.classPropertyName}" class="layui-input" placeholder="请输入${property.classPropertyChinese}" autocomplete="off" />
-                                    </div>
+                        <#list classPropertiesInput as property>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">${property.classPropertyChinese}：</label>
+                                <div class="layui-input-inline">
+                                    <input name="${property.classPropertyName}" id="${property.classPropertyName}" class="layui-input" placeholder="请输入${property.classPropertyChinese}" ${property.type} autocomplete="off" />
                                 </div>
-                            </#list>
-
-
+                            </div>
+                        </#list>
+<#--                            用于xm-select 渲染使用-->
+                        <#list classPropertiesSpecial as propertySpecial>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">${propertySpecial.classPropertyChinese}：</label>
+                                <div class="layui-input-inline">
+                                    <div name="${propertySpecial.classPropertyName}" id="${propertySpecial.classPropertyName}"><div>
+                                </div>
+                            </div>
+                        </#list>
                             <div class="layui-inline">&emsp;
                                 <button class="layui-btn icon-btn" lay-filter="tableSearch" lay-submit>
                                     <i class="layui-icon">&#xe615;</i>搜索
                                 </button>
-                                <button type="reset" class="layui-btn layui-btn-primary icon-btn">
+                                <button type="reset" class="layui-btn layui-btn-primary icon-btn" id="resetButton">
                                     <i class="layui-icon">&#xe669;</i>重置
                                 </button>
                             </div>
@@ -70,21 +76,28 @@
 
 
 
-<!-- 表格操作列 -->
+<!-- 右边表格操作列 -->
 <script type="text/html" id="tableBar">
     <div class="layui-clear-space">
         <button class="layui-btn layui-btn-primary layui-btn-xs" lay-event="check" type="button">查看</button>
         <button class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit" type="button">编辑</button>
         <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete" type="button">删除</button>
+<!--   如果需要更多直接添加功能，     -->
     </div>
 </script>
 
-<!-- 表头 -->
+<!-- 表头 头部操作栏部分-->
 <script type="text/html" id="myToolbar">
     <div class="layui-btn-container">
         <button class="layui-btn layui-btn-sm"  type="button" lay-event="add"><i class="layui-icon layui-icon-add-1"></i>新增</button>
         <button class="layui-btn layui-btn-sm layui-btn-danger icon-btn" lay-event="delete"><i class="layui-icon">&#xe640;</i>删除</button>
     </div>
+</script>
+
+
+<!-- 处理是否的函数 类型于 Boolean 或者 二选一属性的 -->
+<script type="text/html" id="${classPropertyNameWithBoolean}Switch">
+    <input type="checkbox" name="${classPropertyNameWithBoolean}"   data-id={{d.id}}  value="{{d.id}}"  title="启用|禁用" lay-skin="switch" lay-filter="${classPropertyNameWithBoolean}Switch" {{= d.enabled == ${trueTypeValue} ? "checked" : "" }}>
 </script>
 
 
@@ -100,14 +113,16 @@
     let insTb
     // 方法初始化的地方
     $(document).ready(function() {
+        renderXmSelect()
         renderTable()
         renderLaydate()
+        renderButton()
     })
 
     // 时间渲染的方法
     function renderLaydate() {
         /*
-        如果想要不同的选择器 更新 type 标签里面的内容
+        如果想要不同的选择器，更新 type 标签里面的内容，默认选择的只有年月日。每次修改后，需要更改controller中的时间解析代码
         year 年选择器，只提供年列表选择
         month 年月选择器，只提供年、月选择
         date 日期选择器（默认），可选择：年、月、日选择
@@ -117,7 +132,7 @@
         <#list classPropertiesDate as property>
         laydate.render({
             elem: "#${property.classPropertyName}",
-            type: 'date',
+            type: '${property.dateType}',
             range: true,
             rangeLinked: true, //是否开启日期范围选择时的区间联动标注模式，该模式必须开启 range 属性才能生效
         });
@@ -134,6 +149,7 @@
             limits: [10,20,30,40,50,60,70,80,90,100,200,400,600,800,1000], //分页选择的地方
             limit: 20, //默认显示的数量
             page:{curr:1}, //初始页
+            // 如果存在更多模板，需要自己添加
             cols:[[
                 {type: 'checkbox'}, //多选框
                 {title: "id",field: "id",hide:true},
@@ -141,6 +157,7 @@
                 {title: '${property.classPropertyChinese}',field: "${property.classPropertyName}", ${property.templet}},
                 </#list>
 
+                //如果右边宽度不够直接修改width
                 {title: '操作栏', toolbar: '#tableBar', align: 'center', width: 200, fixed: 'right'}, //最右边操作栏
             ]]
        })
@@ -208,15 +225,54 @@
         return false;
     });
 
-    //
+
+    /**
+     * 表格中开关的渲染框
+     */
+    form.on('switch(${classPropertyNameWithBoolean}Switch)', function(obj){
+        let id = this.value;
+        let name = this.name;
+        let value = obj.elem.checked ? ${trueTypeValue} : ${falseTypeValue};
+        console.log(id,name,value)
+
+        $.ajax({
+            url: '<#noparse>${r}</#noparse>/${domainVariableName}/save',
+            method: "POST",
+            data: {
+                id:id,
+                ${classPropertyNameWithBoolean}:value
+            },
+            success: function (response) {
+                if (response.code===200){
+                    // 成功保存后，提示，并退出
+                    layer.msg(response.text, function() {time:2000});
+                    insTb.reload();
+                }else {
+                    console.log(response)
+                    layer.msg("服务器错误", function() {time:2000});
+                }
+            },
+            error: function (xhr, status, error) {
+                layer.alert("数据请求出现问题");
+                console.error("Error:",xhr, status, error);
+            }
+        });
+    });
+
+
+
+    // 集成后的更改页面选择器
     function showAddOrUpdateModel(data,showType) {
         // 设置标题部分
         let titleSet
+        // 对标题进行处理
         if (data){
             if (showType==="edit"){
                 titleSet = '修改'
             }else if (showType === "check"){
                 titleSet = '查看'
+            }else if (showType === "add"){
+                titleSet = "添加"
             }
         }else {
             titleSet = "添加"
@@ -237,6 +293,7 @@
                 let iframe = window['layui-layer-iframe' + index];
                 // 向子页面传递参数
                 if (data){
+                    // 这里如果需要传递更多参数就在这个里面进行修改，并在edit里面进行取出
                     let dataToChild = {
                         "id":data,
                         "type":showType,
@@ -279,8 +336,25 @@
         });
     }
 
+    /**
+     * 额外的button渲染，如果特殊的按钮需要处理
+     */
+    function renderButton() {
+        let resetButton = $("#resetButton")
+        resetButton.click(function () {
 
+        })
+    }
 
+    /**
+     * 渲染XmSelect
+     * 1、如果本地渲染，需要在resetButton哪里重新配置，渲染的数据。
+     * 2、如果网络请求渲染，ajax请求 需要调整为 async: false 需要保证数据回来后再进行后面的渲染。否则后面现实都是undefined
+     * 3、根据官方选出需要的样式 https://maplemei.gitee.io/xm-select/#/component/install
+     */
+    function renderXmSelect() {
+
+    }
 </script>
 
 

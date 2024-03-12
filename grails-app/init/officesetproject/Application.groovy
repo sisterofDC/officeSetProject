@@ -135,6 +135,9 @@ class Application extends GrailsAutoConfiguration {
         }
     }
 
+    /**
+    这个如果有jacob，那么liunx中配置将没有用
+     */
     @Bean
     String imagemagickConfigPath (){
         OsInfo osInfo = new OsInfo()
@@ -160,6 +163,20 @@ class Application extends GrailsAutoConfiguration {
             return ""
         }
     }
+
+    /**
+    *这个只能调用windows 中的组件没有办法，因为这个是调用的dll库中的文件
+     */
+    @Bean
+    String jacobConfig(){
+        // 主要检查两个dll文件是否在 jacob C:\Windows\System32 中
+        // 电脑现在大部分都是64位的
+        String dllFilePath = " C:\\Windows\\System32\\jacob-1.20-x64.dll"
+        if (FileUtil.exist(dllFilePath)) {
+            println("当前jacob配置完毕")
+        }
+    }
+
 
     static void main(String[] args) {
         GrailsApp.run(Application, args)

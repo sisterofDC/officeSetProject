@@ -25,6 +25,7 @@
                     <button type="button" class="layui-btn layui-btn-primary  layui-bg-blue" id="chooseFiles">选择文件</button>
                     <button type="button" class="layui-btn layui-btn-primary" lay-event="beginUpload" id="beginUpload"><i class="layui-icon">&#xe681;</i>开始上传</button>
                     <button type="button" class="layui-btn layui-btn-primary" lay-event="beginConvert" id="beginConvert"><i class="layui-icon">&#xe655;</i>开始转换</button>
+                    <button type="button" class="layui-btn layui-btn-primary layui-btn-normal" lay-event="beginConvert" id="convertByJacob">开始转换</button>
                 </div>
                 <table id="dataTable" lay-filter="dataTable"></table>
             </div>
@@ -252,8 +253,15 @@
 
     function renderButton() {
         let beginConvert = $("#beginConvert")
+        
+        let convertByJacob = $("#convertByJacob")
+        
         beginConvert.click(function () {
             convertRequestFunction()
+        })
+        
+        convertByJacob.click(function () {
+            convertByJacobInterDll()
         })
     }
 
@@ -358,6 +366,35 @@
                 console.error("Error:",xhr, status, error);
             }
         });
+    }
+
+
+    function convertByJacobInterDll() {
+        let allData = table.cache['convertTable'];
+        //依然先处理一个
+        let value = allData[0]
+
+        if(value.uploadStatus==="上传成功"){
+            let fileId = value.cloudStoreFileID
+            let postData = {
+                fileId: fileId
+            };
+            $.ajax({
+                url: '${r}/ServeRendering/jacobRender',
+                type: 'POST',
+                data: postData,
+                success: function(response) {
+                    console.log(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('POST request failed');
+                }
+            });
+        }
+
+
+
+
     }
 
 </script>
