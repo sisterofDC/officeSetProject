@@ -158,6 +158,12 @@
     // 表单提交事件
     form.on('submit(formSubmitBtn)', function (data) {
         console.log("提交数据",JSON.stringify(data.field))
+        /*
+        这里可以在前端做出必要的验证
+
+         */
+
+
         $.ajax({
             <#--  本身的用于提交的${r} 需要注释 -->
             url: '<#noparse>${r}</#noparse>/${domainVariableName}/save',

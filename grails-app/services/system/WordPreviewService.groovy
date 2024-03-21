@@ -1,12 +1,24 @@
 package system
 
+import cn.hutool.core.util.RuntimeUtil
 import com.jacob.activeX.ActiveXComponent
+import com.jacob.com.ComThread
 import com.jacob.com.Dispatch
+import com.jacob.com.Variant
 import grails.gorm.transactions.Transactional
+import org.springframework.beans.factory.annotation.Autowired
+
+import javax.imageio.ImageIO
+import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
+import java.awt.image.BufferedImage
 
 
 @Transactional
 class WordPreviewService {
+
+    @Autowired
+    String imagemagickConfigPath
 
     def getPDFFile(String source,String target){
         ActiveXComponent app
@@ -30,4 +42,13 @@ class WordPreviewService {
         }
     }
 
+
+
+
+    def convertToJPG(String source,String output){
+        String CommandLine = imagemagickConfigPath+" convert -verbose "+ source +"  -density 220 -quality 80 -background white -alpha copy"+ output
+        println(CommandLine)
+        String str = RuntimeUtil.execForStr(CommandLine)
+        println(str)
+    }
 }

@@ -109,14 +109,28 @@ class ServeRenderingController {
         FileInfo fileInfo = FileInfo.findByFileId(fileId)
         String source = fileInfo.getFilePath()
         String target =  serveRenderingService.updateFileNameToPDF(fileInfo.getFilePath())
+
+        String targetFile = serveRenderingService.updateFileName(fileInfo.getFilePath(),"png")
+        String path = "D:\\generateTest\\"
         println(source)
-        println(target)
-        wordPreviewService.getPDFFile(source,target)
+        println(targetFile)
+        wordPreviewService.convertWordToPNG(source,path)
+//        wordPreviewService.getPDFFile(source,target)
+//        Thread.sleep(5000);
+//        String pdfSource = target
+//        String outPutPNG =  "D:\\generateTest\\page-%03d.png"
+//        String outputJPG = "D:\\generateTest\\page-%03d.jpg"
+//        wordPreviewService.convertToPNG(pdfSource,outPutPNG)
+//        wordPreviewService.convertToJPG(pdfSource,outputJPG)
+
+
         def successResponseData = [
                 "code":200,
                 "data":"开始转换",
         ]
         render(successResponseData as JSON)
     }
+
+
 
 }

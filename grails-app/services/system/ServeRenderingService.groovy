@@ -123,6 +123,17 @@ class ServeRenderingService {
         }
     }
 
+    static String updateFileName(String fileName, String suffixName) {
+        def fileNameSplit = fileName.split('\\.')
+        if (fileNameSplit.size() > 1) {
+            // 如果有后缀, 变为指定的后缀
+            def newFileName = fileNameSplit[0..-2].join('.')
+            return "${newFileName}.${suffixName}"
+        } else {
+            // 没有后缀就直接为加指定的后缀
+            return "${fileName}.${suffixName}"
+        }
+    }
 
     @Async
     Future asyncMethodWithReturnType(String fileId,Integer times) {
