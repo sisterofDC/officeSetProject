@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+  <script src="/set.js"></script>
+  <script src="/jquery-3.7.1.js"></script>
+</head>
+<body>
+
+
+<button id="submit">提交</button>
+
+<script>
+
+
+  class BloodCellReferenceRanges {
+    constructor(itemName, unit, minValue, maxValue, gender, ageGroupStart, ageGroupEnd, bloodType) {
+      this.itemName = itemName;       // 项目名称，例如：WBC, Neut#
+      this.unit = unit;               // 单位，例如：×10^9/L
+      this.minValue = minValue;       // 最小值
+      this.maxValue = maxValue;       // 最大值
+      this.gender = gender;           // 性别，'Male' 或 'Female'
+      this.ageGroupStart = ageGroupStart; // 年龄段起始，单位：月
+      this.ageGroupEnd = ageGroupEnd;     // 年龄段结束，单位：月
+      this.bloodType = bloodType;         // 血样类型，'静脉血' 或 '末梢血'
+    }
+  }
+
+
+  $("#submit").click(function () {
+    let allDate = []
+
+    for (let i = 0; i < dataSet.length; i++) {
+      let item = dataSet[i];
+
+      let itemName = item.itemName
+      let unit = item.unit
+
+      let dataprase = item.dataPrase
+
+      let genderMale = "Male"
+      let genderFemale = "Female"
+      let bloodTypeVenousBlood = "静脉血"
+      let bloodTypePeripheralBlood = "末梢血"
+
+      for (let j = 0; j < dataprase.length; j++) {
+        let oneline = dataprase[j];
+        if (oneline.length === 6){
+
+          let ageGroupStart = oneline[0]
+          let ageGroupEnd = oneline[1]
+
+          let minValueOfBloodTypeVenousBlood = oneline[2]
+          let maxValueOfBloodTypeVenousBlood = oneline[3]
+
+          let minValueOfBloodTypePeripheralBlood = oneline[4]
+          let maxValueOfBloodTypePeripheralBlood = oneline[5]
+
+          //   开始组装
+          let bloodCellReferenceRangesOfVenousBloodMale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypeVenousBlood,
+                  maxValueOfBloodTypeVenousBlood,
+                  genderMale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypeVenousBlood)
+
+          let bloodCellReferenceRangesOfVenousBloodFemale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypeVenousBlood,
+                  maxValueOfBloodTypeVenousBlood,
+                  genderFemale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypeVenousBlood
+          )
+
+          let bloodCellReferenceRangesOfPeripheralBloodMale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypePeripheralBlood,
+                  maxValueOfBloodTypePeripheralBlood,
+                  genderMale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypePeripheralBlood
+          )
+
+          let bloodCellReferenceRangesOfPeripheralBloodFemale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypePeripheralBlood,
+                  maxValueOfBloodTypePeripheralBlood,
+                  genderFemale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypePeripheralBlood
+          )
+
+          allDate.push(bloodCellReferenceRangesOfVenousBloodMale)
+          allDate.push(bloodCellReferenceRangesOfVenousBloodFemale)
+          allDate.push(bloodCellReferenceRangesOfPeripheralBloodMale)
+          allDate.push(bloodCellReferenceRangesOfPeripheralBloodFemale)
+
+        }else {
+          console.log("分开男女的")
+          let ageGroupStart = oneline[0]
+          let ageGroupEnd = oneline[1]
+
+          let minValueOfBloodTypeVenousBloodMale = oneline[2]
+          let maxValueOfBloodTypeVenousBloodMale = oneline[3]
+
+          let minValueOfBloodTypeVenousBloodFemale = oneline[4]
+          let maxValueOfBloodTypeVenousBloodFemale = oneline[5]
+
+          let minValueOfBloodTypePeripheralBloodMale = oneline[6]
+          let maxValueOfBloodTypePeripheralBloodMale = oneline[7]
+
+          let minValueOfBloodTypePeripheralBloodFemale = oneline[8]
+          let maxValueOfBloodTypePeripheralBloodFemale = oneline[9]
+
+
+          let bloodCellReferenceRangesOfVenousBloodMale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypeVenousBloodMale,
+                  maxValueOfBloodTypeVenousBloodMale,
+                  genderMale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypeVenousBlood
+          )
+
+          let bloodCellReferenceRangesOfVenousBloodFemale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypeVenousBloodFemale,
+                  maxValueOfBloodTypeVenousBloodFemale,
+                  genderFemale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypeVenousBlood
+          )
+
+          let bloodCellReferenceRangesOfPeripheralBloodMale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypePeripheralBloodMale,
+                  maxValueOfBloodTypePeripheralBloodMale,
+                  genderMale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypePeripheralBlood
+          )
+
+          let bloodCellReferenceRangesOfPeripheralBloodFemale = new BloodCellReferenceRanges(
+                  itemName,
+                  unit,
+                  minValueOfBloodTypePeripheralBloodFemale,
+                  maxValueOfBloodTypePeripheralBloodFemale,
+                  genderFemale,
+                  ageGroupStart,
+                  ageGroupEnd,
+                  bloodTypePeripheralBlood
+          )
+
+          allDate.push(bloodCellReferenceRangesOfVenousBloodMale)
+          allDate.push(bloodCellReferenceRangesOfVenousBloodFemale)
+          allDate.push(bloodCellReferenceRangesOfPeripheralBloodMale)
+          allDate.push(bloodCellReferenceRangesOfPeripheralBloodFemale)
+
+        }
+
+
+      }
+
+    }
+
+
+    console.log(allDate)
+
+
+    $.each(allDate, function (index, item) {
+      heightPost(item)
+    })
+
+
+  })
+
+
+  function heightPost (data) {
+    $.ajax({
+      url: 'http://localhost:9999/bloodCellReferenceRanges/save',
+      type: 'POST',
+      data: data,
+      crossDomain: true, // 启用跨域请求
+      headers: {
+        'Access-Control-Allow-Origin': '*', // 允许任何源访问
+        'Access-Control-Allow-Methods': 'POST', // 允许 POST 方法
+        'Access-Control-Allow-Headers': 'Content-Type' // 允许 Content-Type 头
+      },
+      success: function(response) {
+        // 处理成功响应
+        console.log('数据提交成功:', response);
+        console.log("成功",data)
+      },
+      error: function(xhr, status, error) {
+        // 处理错误响应
+        console.error('数据提交失败:', error);
+        console.log("错误",data)
+      }
+    });
+  }
+
+  
+  
+  
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+  <script src="/jquery-3.7.1.js"></script>
+</head>
+<body>
+
+<textarea id='myTextarea'></textarea>
+
+<button id="parseData">解析</button>
+
+<textarea id="showParse"></textarea>
+
+<script>
+
+  $("#parseData").click(function () {
+    const textarea = $('#myTextarea');
+    const content = textarea.val();
+
+    // 使用换行符（\n）分割字符串，根据实际使用的换行符选择合适的分割符
+    const lines = content.split('\n');
+
+// 初始化一个空数组来存储JSON对象
+    const items = [];
+
+// 每三行数据组装成一个JSON对象
+    for (let i = 0; i < lines.length; i += 3) {
+      if (i + 2 < lines.length) {
+        const itemName = lines[i]
+        const unit = lines[i + 1]
+        const dataPrase = lines[i + 2]
+
+        // 创建一个JSON对象并添加到数组中
+        items.push({
+          itemName: itemName,
+          unit: unit,
+          dataPrase: dataPrase
+        });
+      }
+    }
+
+    console.log(items)
+    const jsonString = JSON.stringify(items);
+    $('#showParse').val(jsonString);
+
+  })
+
+
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/jquery-3.7.1.js"></script>
+    <script src="/height.js"></script>
+    <script src="/heightFemale.js"></script>
+    <script src="/heightdiveWightFemale.js"></script>
+    <script src="/heightDiveWightMale.js"></script>
+</head>
+<body>
+
+<button id="begin"></button>
+
+<textarea id="setText"></textarea>
+
+<script>
+
+    class HeightObject {
+        constructor(gender, ageInMonths, minus3SD, minus2SD, minus1SD, median, plus1SD, plus2SD, plus3SD,type) {
+            this.gender = gender;
+            this.ageInMonths = ageInMonths;
+            this.minus3SD = minus3SD;
+            this.minus2SD = minus2SD;
+            this.minus1SD = minus1SD;
+            this.median = median;
+            this.plus1SD = plus1SD;
+            this.plus2SD = plus2SD;
+            this.plus3SD = plus3SD;
+            this.type = type
+        }
+    }
+
+
+    function postAllData( inputArray,sex,type){
+        let findAges = []
+        let basicArray = inputArray
+
+        for (let i = 0; i < basicArray.length; i++) {
+            let item = basicArray[i];
+            console.log(item)
+            let ageInMonths = convertAgeToMonths(item[0]);
+            findAges.push(ageInMonths)
+        }
+        // console.log(findAges)
+
+        for (let j = 0; j < 85; j++) {
+            let recent = 0
+            for (let i = 0; i < findAges.length; i++) {
+                if (findAges[i]>j){
+                    recent = i-1
+                    break
+                }else {
+                    recent = findAges.length-1
+                }
+            }
+            // console.log(j,findAges[recent])
+
+            let item = basicArray[recent];
+            let heightObj = new HeightObject(
+                sex,
+                j,
+                item[1],
+                item[2],
+                item[3],
+                item[4],
+                item[5],
+                item[6],
+                item[7],
+                type
+            );
+
+            console.log(heightObj);
+            heightPost(heightObj);
+    }
+
+
+    $("#begin").click(function () {
+        postAllData(heightMaleData, "Male","Weight")
+        postAllData(heightFemale, "Female","Weight")
+        postAllData(maleHeightAndWeight, "Male","Height")
+        postAllData(heightdiveWightFemale, "Female","Height")
+    })
+
+
+    function convertAgeToMonths(ageStr) {
+        let parts = ageStr.split('.');
+        if (parts.length === 2) {
+            let years = parseInt(parts[0], 10);
+            let monthsPart = parseInt(parts[1], 10);
+            return years * 12 + monthsPart;
+        }else if (parts.length === 1) {
+            return parseInt(parts[0], 10) * 12;
+        }
+        return 0;
+    }
+
+    function heightPost (data) {
+        $.ajax({
+            url: 'http://localhost:9999/heightWeightStandardDeviation/save',
+            type: 'POST',
+            data: data,
+            crossDomain: true, // 启用跨域请求
+            headers: {
+                'Access-Control-Allow-Origin': '*', // 允许任何源访问
+                'Access-Control-Allow-Methods': 'POST', // 允许 POST 方法
+                'Access-Control-Allow-Headers': 'Content-Type' // 允许 Content-Type 头
+            },
+            success: function(response) {
+                // 处理成功响应
+                console.log('数据提交成功:', response);
+                console.log("成功",data.ageInMonths)
+            },
+            error: function(xhr, status, error) {
+                // 处理错误响应
+                console.error('数据提交失败:', error);
+                console.log("错误",data.ageInMonths)
+            }
+        });
+    }
+
+
+
+
+</script>
+
+
+</body>
+</html>

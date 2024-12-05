@@ -1,6 +1,10 @@
 ---
+
+
 grails:
     profile: web
+    cors:
+        enabled:true
     codegen:
         defaultPackage: officesetproject
     gorm:
@@ -118,11 +122,11 @@ environments:
         dataSource:
             pooled: true
             dbCreate: "update"
-            url: "jdbc:mysql://localhost:33061/office_study?useUnicode=true&characterEncoding=UTF-8"
+            url: "jdbc:mysql://localhost:33060/officeSetProject?useUnicode=true&characterEncoding=UTF-8"
             driverClassName: "com.mysql.jdbc.Driver"
             dialect: "org.hibernate.dialect.MySQL5InnoDBDialect"
             username: "root"
-            password: "sisterofdc"
+            password: "root"
     test:
         dataSource:
             dbCreate: update
@@ -141,7 +145,7 @@ quartz:
     autoStartup: true
 server:
     context-path: "/"
-    port: 80   #这里内嵌tomcat端口号
+    port: 9999   #这里内嵌tomcat端口号
 
 
 
