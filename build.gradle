@@ -101,6 +101,9 @@ dependencies {
     implementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
 
     implementation files('lib/jacob.jar')
+
+    implementation 'org.libreoffice:libreoffice:24.2.3'
+
 }
 
 bootRun {

@@ -13,3 +13,4 @@ out/
 *.pdf
 *.doc
 *.docx
+/src/main/webapp/fileSystem

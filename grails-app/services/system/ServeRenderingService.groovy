@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
 
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.concurrent.Future
 
 @Transactional
@@ -35,6 +37,7 @@ class ServeRenderingService {
         chromeOptions.addArguments("--remote-allow-origins=*")
         chromeOptions.addArguments("--start-maximized")
         chromeOptions.addArguments("--disable-gpu")
+        chromeOptions.addArguments("--disable-features=PrintCompositorLPAC")
         chromeOptions.setBinary("D:\\chrome\\chrome-win64\\chrome.exe")
         ChromeDriver chromeDriver = new ChromeDriver(chromeOptions)
 
@@ -69,7 +72,7 @@ class ServeRenderingService {
         width = width* 0.0264583333
         height = height * 0.0264583333
 //        留个2cm的高
-        height= height+2.00
+        height= height+6.00
 //        设置打印的宽度和区间。
         PageSize pageSize = new PageSize(height,width)
 //        开始设置打印的参数
@@ -91,8 +94,66 @@ class ServeRenderingService {
                 fileSystemService.convertToMultipartFileByInputStream(inputStream,updateFileNameToPDF(fileInfo.getFileOriginName())),
                 "PDF")
         chromeDriverConfig.close()
+        println("PDF文件生成成功")
+        println(fileId)
         return fileId
     }
+
+
+
+    String chromeDriverPrintPDFReName(String serverUrl,FileInfo fileInfo){
+//        打开已经转换后的文件设置路径，（这里提醒，LibreOffice 转出来 再到 系统映射需要时间 所以这个函数启动需要前置时间）
+        ChromeDriver chromeDriverConfig =  chromeDriverInit()
+//        等待新的加载
+        Thread.sleep(2000);
+        chromeDriverConfig.get(serverUrl)
+//        等待服务器端模拟的加载
+        Thread.sleep(3000);
+//        这里还有细节调节。
+//        这里在看几个文件，取table的宽度，这个是libreOffice转HTML 中html页面中，取出来的大小，是定制化的组件。需要去看到底是取那个部分
+//        这里是取页面宽度。整合页面太宽了
+        def width =  chromeDriverConfig.executeScript("return document.querySelector('table').scrollWidth")
+//        这里取页面高度
+        def height= chromeDriverConfig.executeScript("return document.querySelector('table').scrollHeight");
+
+        String reWriteFileName = (String) chromeDriverConfig.executeScript("return document.querySelectorAll('table tr')[4].querySelectorAll('td')[1].textContent;");
+
+//        将取出来进行调整，变成打印的厘米数
+        println("高度："+height* 0.0264583333 +"cm");
+        println("宽度："+width* 0.0264583333 +"cm");
+        println("单位："+reWriteFileName)
+//        进行转换
+        width = width* 0.0264583333
+        height = height * 0.0264583333
+//        留个2cm的高
+        height= height+12.00
+//        设置打印的宽度和区间。
+        PageSize pageSize = new PageSize(height,width)
+//        开始设置打印的参数
+        PrintOptions printOptions = new PrintOptions()
+//        把边框调整为0
+        printOptions.setPageMargin(new PageMargin(0,0,0,0))
+//        把纸张大小带进去
+        printOptions.setPageSize(pageSize)
+//        设置为竖向打印
+        printOptions.setOrientation(PrintOptions.Orientation.PORTRAIT)
+//        开始打印，这个这个是模拟器的类
+        def pdf =  chromeDriverConfig.print(printOptions)
+//        看封装的pdf 类， 是一个base64EncodedPdf 转为byte[]
+        byte[] pdfBytes = Base64.decode(pdf.getContent())
+//        将inputStream塞进去MultipartFile 存进去
+        InputStream inputStream = new ByteArrayInputStream(pdfBytes);
+//        转为multipartFile然后，转为pdf后缀，最后放在pdf文件夹里面。
+        String fileId =  fileSystemService.uploadFile(
+                fileSystemService.convertToMultipartFileByInputStream(inputStream,updateFileNameToPDF(reWriteFileName)),
+                "PDF")
+        chromeDriverConfig.close()
+        println("PDF文件生成成功")
+        println(fileId)
+        return fileId
+    }
+
+
 
     /**
      * 私有方法转换为PDF，把后缀转换为
@@ -139,13 +200,37 @@ class ServeRenderingService {
     Future asyncMethodWithReturnType(String fileId,Integer times) {
         System.out.println("Execute method asynchronously - " + Thread.currentThread().getName())
         try {
-            return new AsyncResult(preview(fileId,times))
+            return new AsyncResult(previewJustHtml(fileId,times))
         } catch (InterruptedException e) {
             log.println(e)
         }
         return null
     }
 
+
+
+    LinkedHashMap<String,String> previewJustHtml(String fileId,Integer times){
+        FileInfo fileInfo = FileInfo.findByFileId(fileId)
+        //            把路径取出来，用于生成命令中的源文件
+        String filePath = fileInfo.getFilePath()
+        if (fileInfo){
+            String outputDirectory = fileSystemService.getDirectoryByFileBucket(fileInfo.fileBucket)
+            String outputFilePath = outputDirectory+File.separator+fileInfo.fileId+".html"
+            // 读取文件
+            String content = new String(Files.readAllBytes(Paths.get(outputFilePath)));
+            // 替换样式
+            content = content.replace("font-size:x-small", "font-size:large");
+            // 写回文件
+            Files.write(Paths.get(outputFilePath), content.getBytes());
+            String openUrl= " http://localhost:9999/fileSystem/defaultBucket/"+fileId+".html"
+//                        开始进行下一步的转换
+            String pdfFileId = chromeDriverPrintPDFReName(openUrl,fileInfo)
+            return ["status":"1","code":pdfFileId]
+        }else {
+            return ["status":"2","code":"文件不存在"]
+        }
+
+    }
 
     /**
      * 现在把这个全部弄成future的格式，最后返回生成的链接，这里是
